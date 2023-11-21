@@ -10,6 +10,7 @@ const admin_btns = {
   inline_keyboard: [
     [{ text: 'Таблицы', callback_data: 'admin_tables' }],
     [{ text: 'Снипеты для модерации', callback_data: 'snippets' }],
+    [{ text: 'Лендинг оплаты сайта', web_app: { url: 'https://yokrossbot.ru' } }],
     [
       {
         text: 'Основной бот (Не трогай в беседе команды)',
@@ -108,7 +109,7 @@ module.exports = {
   keyboard,
   chatOptions_profile,
   gender,
-//  paymentAgreemet,
+  //  paymentAgreemet,
   profile_keyboard,
   admin_btns,
   check_style,
