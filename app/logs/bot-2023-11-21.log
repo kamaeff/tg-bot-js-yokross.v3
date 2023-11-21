@@ -1,0 +1,13 @@
+2023-11-21 14:20:12 info: User x_antoster_x was auth. Database: x_antoster_x already exist
+2023-11-21 14:20:18 info: User Anton go to Menu.
+2023-11-21 14:21:07 info: User Anton in ShowRoom.
+2023-11-21 14:21:12 info: User Anton go to Menu.
+2023-11-21 14:21:16 info: Anton choose brand basketball
+2023-11-21 14:23:17 info: Anton choose brand basketball
+2023-11-21 14:23:20 info: Anton choose Jordan
+2023-11-21 14:23:23 info: Size: 8 us for x_antoster_x of Jordan
+ Gender: man
+ Style: basket
+. Success, Output: 1
+
+2023-11-21 14:23:24 info: User Anton go to Menu.

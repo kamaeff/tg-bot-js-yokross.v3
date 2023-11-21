@@ -1,0 +1,76 @@
+async function sendPhotoWithNavigation(
+     bot,
+     chatId,
+     userSession,
+     currentIndex,
+     photo,
+     totalPhotos,
+     showPrevButton
+   ) {
+     const showNext = currentIndex + 1 < totalPhotos
+     await bot.sendPhoto(chatId, photo.path, {
+       caption:
+         `👟 <b>Кроссовки <i>${photo.name}</i></b>\n\n` +
+         `🧵 <b>Характеристики:</b>\n\n` +
+         `➖ <b>Пол:</b> <i>${photo.gender}</i>\n` +
+         `➖ <b>Цвет:</b> <i>${photo.color}</i>\n` +
+         `➖ <b>Материал:</b> <i>${photo.material}</i>\n` +
+         `➖ <b>Размер:</b> <i>${photo.size} us</i>\n\n` +
+         `💸 <b>Цена:</b> <code>${photo.price}₽</code>`,
+       parse_mode: 'HTML',
+       reply_markup: JSON.stringify({
+         inline_keyboard: [
+           [
+             { text: showPrevButton ? '<<' : '', callback_data: 'prev_photo' },
+             {
+               text: `${currentIndex + 1}/${totalPhotos}`,
+               callback_data: 'dummy',
+             },
+             { text: showNext ? '>>' : '', callback_data: 'next_photo' },
+           ],
+           [{ text: '🛒 Заказать', callback_data: 'order' }],
+           [{ text: '🏠 Выход в главное меню', callback_data: 'exit' }],
+         ],
+       }),
+     })
+   }
+   
+   async function Photo_orders(
+     bot,
+     chatId,
+     userSession,
+     currentIndex,
+     photo,
+     totalPhotos,
+     showPrevButton
+   ) {
+     const showNext = currentIndex + 1 < totalPhotos
+     await bot.sendPhoto(chatId, photo.path, {
+       caption:
+         `👟 <b>Кроссовки ${photo.name}</b>\n\n` +
+         `🧵 <b>Характеристики:</b>\n\n` +
+         `➖ <b>Цвет:</b> <i>${photo.color}</i>\n` +
+         `➖ <b>Материал:</b> <i>${photo.material}</i>\n` +
+         `➖ <b>Размер:</b> <i>${photo.size} us</i>\n\n` +
+         `💸 <b>Цена:</b> <code>${photo.price}₽</code>`,
+       parse_mode: 'HTML',
+       reply_markup: JSON.stringify({
+         inline_keyboard: [
+           [
+             { text: showPrevButton ? '<<' : '', callback_data: 'prev_photo_o' },
+             {
+               text: `${currentIndex + 1}/${totalPhotos}`,
+               callback_data: 'dummy',
+             },
+             { text: showNext ? '>>' : '', callback_data: 'next_photo_o' },
+           ],
+           [{ text: '🏠 Выход в главное меню', callback_data: 'home' }],
+         ],
+       }),
+     })
+   }
+
+module.exports = {
+     sendPhotoWithNavigation,
+     Photo_orders
+}
