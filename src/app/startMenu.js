@@ -60,7 +60,7 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.Console(),
     new DailyRotateFile({
-      filename: './src/app/logs/bot-%DATE%.log',
+      filename: './src/logs/bot-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
