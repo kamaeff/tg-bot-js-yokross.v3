@@ -186,124 +186,15 @@ async function select_photo(selectedPhoto) {
   }
 }
 
-async function addToOrder(data, size) {
+async function new_order(chat_id, order_id, name_shooes, size, price) {
   const connection = await createConnection()
-
-  try {
-    const [rows] = await connection.execute(
-      'SELECT name_shooes, gender_option FROM Updates WHERE name_shooes = ? AND size = ?',
-      [data, size]
-    )
-
-    const log = rows.map((row) => ({
-      name: row.name_shooes,
-      gender: row.gender_option,
-    }))
-
-    if (log == false) {
-      return false
-    } else {
-      return log
-    }
-  } catch (error) {
-    console.error('Произошла ошибка:', error)
-  } finally {
-    connection.end()
-  }
-}
-
-async function setLocale(chatid, city) {
-  const connection = await createConnection()
-  chatid = parseInt(chatid)
-  console.log(chatid)
-
-  try {
-    const [rows] = await connection.execute(
-      'SELECT locale FROM users WHERE chat_id = ?',
-      [chatid]
-    )
-
-    const log = rows.map((row) => ({
-      locale: row.locale,
-    }))
-
-    console.log(log.locale)
-
-    if (log.locale === undefined) {
-      await connection.execute(
-        'UPDATE users SET locale = ? WHERE chat_id = ?',
-        [city, chatid]
-      )
-    } else {
-      console.log(
-        `Локаль для chat_id ${chatid} не была обновлена, так как значение не равно "none".`
-      )
-    }
-  } catch (error) {
-    console.error('Произошла ошибка:', error)
-  } finally {
-    connection.end()
-  }
-}
-
-async function checkCity(chat_id) {
-  chat_id = chat_id.toString()
-  const connection = await createConnection()
-  try {
-    const [rows] = await connection.execute(
-      'SELECT locale FROM users WHERE chat_id = ?',
-      [chat_id]
-    )
-
-    if (rows.length > 0) {
-      // Проверяем, является ли значение столбца "locale" null или пустой строкой
-      if (rows[0].locale === null || rows[0].locale.trim() === '') {
-        return false // Строка пустая
-      } else {
-        return true // Строка не пустая
-      }
-    } else {
-      return false // Запись не найдена
-    }
-  } catch (error) {
-    console.error('Произошла ошибка:', error)
-  } finally {
-    connection.end()
-  }
-
-  async function getCity(chat_id) {
-    chat_id = chat_id.toString()
-    const connection = await createConnection()
-    try {
-      const [rows] = await connection.execute(
-        'SELECT locale FROM users WHERE chat_id = ?',
-        [chat_id]
-      )
-
-      if (rows.length > 0) {
-        return rows[0].locale
-      } else {
-        return false
-      }
-    } catch (error) {
-      console.error('Произошла ошибка:', error)
-    } finally {
-      connection.end()
-    }
-  }
-}
-
-async function new_order(chat_id, FIO, price, name_shooes) {
-  const connection = await createConnection()
-  let order_id = chat_id + Date.now()
-  console.log(order_id)
-
   chat_id = chat_id.toString()
   try {
     await connection.execute(
-      'UPDATE orders SET order_id = ?, order_status = ?, name = ?, name_kross = ?, price = ?, ordered = ? WHERE chat_id = ?',
-      [order_id, 'Не оплачено', FIO, name_shooes, price, 'Ожидание оплаты', chat_id])
-    return order_id
+      'INSERT INTO orders (chat_id, order_id, order_status, name_kross, size, price, ordered) VALUES (?,?,?,?,?,?,?)',
+      [chat_id, order_id, 'Не оплачено', name_shooes, size, price, 'Ожидание оплаты'])
+    await connection.execute('UPDATE Updates SET flag_order = ? WHERE name = ?', [1, name_shooes])
+    return true
   } catch (error) {
     console.error('Произошла ошибка:', error)
   } finally {
@@ -311,12 +202,13 @@ async function new_order(chat_id, FIO, price, name_shooes) {
   }
 }
 
-async function delOrder(chat_id) {
-  const flag_order = '0'
+async function delOrder(chat_id, name) {
+  console.log(chat_id)
   const connection = await createConnection()
   try {
-    await connection.execute('DELETE FROM orders WHERE chat_id = ?', [chat_id])
-    console.log(`Отмена заказа ${chat_id}`)
+    await connection.execute('UPDATE Updates SET flag_order = ? WHERE name = ?', [0, name])
+    console.log(`Отмена заказа`)
+    await connection.execute('DELETE FROM orders WHERE order_id = ?', [chat_id])
   } catch (error) {
     console.error('Произошла ошибка:', error)
   } finally {
@@ -509,11 +401,8 @@ module.exports = {
   send_photo,
   send_dynamic_add_photo,
   select_photo,
-  addToOrder,
   getProfile,
   testDatabaseConnection,
-  setLocale,
-  checkCity,
   new_order,
   delOrder,
   createPDF,

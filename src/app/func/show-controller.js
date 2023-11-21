@@ -8,44 +8,6 @@ async function showmenu(
   userSession,
   userSessions
 ) {
-  if (photosWithDescriptions === false) {
-    bot.sendMessage(
-      chatId,
-      `✌🏼 Yo <i><b>${msg.message.chat.first_name}</b></i>, идет обновление каталога пар, извини за недоразумение. Скоро пофиксим!`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: JSON.stringify(keyboard),
-      }
-    )
-  } else {
-    if (!userSession) {
-      userSession = {
-        photos: photosWithDescriptions,
-        currentIndex: 0,
-      }
-      userSessions.set(chatId, userSession)
-    } else {
-      userSession.photos = photosWithDescriptions
-      userSession.currentIndex = 0
-    }
-
-    if (userSession.photos.length > 0) {
-      const currentIndex = userSession.currentIndex
-      const firstPhoto = userSession.photos[currentIndex]
-      const totalPhotos = userSession.photos.length
-      const showPrevButton = currentIndex > 0
-
-      await sendPhotoWithNavigation(
-        bot,
-        chatId,
-        userSession,
-        currentIndex,
-        firstPhoto,
-        totalPhotos,
-        showPrevButton
-      )
-    }
-  }
 }
 
 async function next_photo(bot, chatId, userSession, userSessions) {

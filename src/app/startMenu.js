@@ -15,7 +15,6 @@ const {
   send_photo,
   send_dynamic_add_photo,
   select_photo,
-  addToOrder,
   getProfile,
   delOrder,
   createPDF,
@@ -26,6 +25,7 @@ const {
   add_style,
   get_userStyle,
   get_currentOrder,
+  new_order,
 } = require('./DB/db')
 
 const { sendPhotoWithNavigation } = require('./func/carusel')
@@ -44,7 +44,6 @@ const { showmenu, next_photo, prev_photo } = require('./func/show-controller')
 const userSessions = new Map()
 let userSession
 let selectedPhoto = 0
-let city
 const YokrossId = '@yokross12'
 let check
 
@@ -437,8 +436,13 @@ module.exports = bot => {
         logger.info(`User ${msg.message.chat.first_name} stop order.`)
         bot.deleteMessage(chatId, messageId)
 
-        await start(bot, chatId, msg.message.chat.first_name, userSessions)
-        await delOrder(chatId)
+        if (userSession && userSession.photos) {
+          selectedPhoto = userSession.photos[userSession.currentIndex]
+        } else {
+          console.error('userSession or photos is undefined or null.')
+        }
+        userSessions.get(chatId, userSession)
+        await delOrder(userSession.order_id, selectedPhoto.name)
         break
 
       case 'show':
@@ -448,13 +452,44 @@ module.exports = bot => {
           userSession = userSessions.get(chatId)
           const photosWithDescriptions = await send_dynamic_add_photo()
 
-          await showmenu(
-            photosWithDescriptions,
-            bot,
-            chatId,
-            userSession,
-            userSessions
-          )
+          if (photosWithDescriptions === false) {
+            bot.sendMessage(
+              chatId,
+              `✌🏼 Yo <i><b>${msg.message.chat.first_name}</b></i>, идет обновление каталога пар, извини за недоразумение. Скоро пофиксим!`,
+              {
+                parse_mode: 'HTML',
+                reply_markup: JSON.stringify(keyboard),
+              }
+            )
+          } else {
+            if (!userSession) {
+              userSession = {
+                photos: photosWithDescriptions,
+                currentIndex: 0,
+              }
+              userSessions.set(chatId, userSession)
+            } else {
+              userSession.photos = photosWithDescriptions
+              userSession.currentIndex = 0
+            }
+
+            if (userSession.photos.length > 0) {
+              const currentIndex = userSession.currentIndex
+              const firstPhoto = userSession.photos[currentIndex]
+              const totalPhotos = userSession.photos.length
+              const showPrevButton = currentIndex > 0
+
+              await sendPhotoWithNavigation(
+                bot,
+                chatId,
+                userSession,
+                currentIndex,
+                firstPhoto,
+                totalPhotos,
+                showPrevButton
+              )
+            }
+          }
         }
         break
 
@@ -473,6 +508,52 @@ module.exports = bot => {
         break
 
       case 'order':
+        bot.deleteMessage(chatId, messageId)
+
+        if (userSession && userSession.photos) {
+          selectedPhoto = userSession.photos[userSession.currentIndex]
+        } else {
+          console.error('userSession or photos is undefined or null.')
+        }
+
+        userSession = {
+          order_id: chatId + Date.now(),
+          name: selectedPhoto.name,
+          size: selectedPhoto.size,
+          price: selectedPhoto.price
+        }
+        userSessions.set(chatId, userSession)
+
+        const addting = await new_order(chatId, userSession.order_id, userSession.name, userSession.size, userSession.price)
+        if (addting === true) {
+          console.log(`${userSession.order_id} was added`)
+        }
+        await bot.sendPhoto(chatId, selectedPhoto.path, {
+          caption:
+            `👟 <b>Кроссовки <i>${selectedPhoto.name}</i></b>\n\n` +
+            `🧵 <b>Характеристики:</b>\n\n` +
+            `➖ <b>Цвет:</b> <i>${selectedPhoto.color}</i>\n` +
+            `➖ <b>Материал:</b> <i>${selectedPhoto.material}</i>\n` +
+            `➖ <b>Размер:</b> <i>${selectedPhoto.size} us</i>\n\n` +
+            `💸 <b>Цена:</b> <code>${selectedPhoto.price}₽</code>\n\n` +
+            `Yo <i>${msg.message.chat.first_name}</i>, перед тем как оплатить прочитай <i><b>📑 Пользовательское соглашение</b></i>`,
+          parse_mode: 'HTML',
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [
+                {
+                  text: '📑 Пользовательское соглашение',
+                  url: 'https://t.me/yokrossguide12/3',
+                },
+              ],
+              [{ text: `💸 Оплатить заказ ${userSession.order_id}`, url: 'https://yokrossbot.ru/' }],
+              [
+                { text: '✅ Я оплатил', callback_data: 'payment' },
+                { text: '🚫 Отменить заказ', callback_data: 'stoporder' },
+              ]
+            ]
+          })
+        })
 
         break
 
@@ -489,6 +570,8 @@ module.exports = bot => {
         } else {
           console.error('userSession or photos is undefined or null.')
         }
+
+        console.log(userSession.order_id)
 
         await tech(bot, chatId, msg.message.chat.first_name)
 
