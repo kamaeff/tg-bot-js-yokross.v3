@@ -546,7 +546,7 @@ module.exports = bot => {
                   url: 'https://t.me/yokrossguide12/3',
                 },
               ],
-              [{ text: `💸 Оплатить заказ ${userSession.order_id}`, url: 'https://yokrossbot.ru/' }],
+              [{ text: `💸 Оплатить заказ #${userSession.order_id}`, url: 'https://yokrossbot.ru/' }],
               [
                 { text: '✅ Я оплатил', callback_data: 'payment' },
                 { text: '🚫 Отменить заказ', callback_data: 'stoporder' },
