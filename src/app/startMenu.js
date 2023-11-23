@@ -32,7 +32,6 @@ const {
 const { sendPhotoWithNavigation } = require('./func/carusel')
 const { start, tech, start_admin, check_folow } = require('./func/main-func')
 
-const { text } = require('body-parser')
 const { admins } = require('./func/admin')
 const { gender_choose } = require('./func/gender')
 const {
@@ -75,8 +74,6 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
     const log = await addToOrder(data, msg.text, chatId)
     const user = await get_userStyle(chatId)
 
-    console.log(log)
-
     if (parseInt(msg.text) && log != false && log != undefined) {
       userSession = {
         size: msg.text,
@@ -93,7 +90,6 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
         userSession.gender
       )
 
-      console.log(res)
       if (userSession) {
         userSession = {
           photos: res,
