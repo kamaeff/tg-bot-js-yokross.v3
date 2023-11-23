@@ -18,7 +18,7 @@ async function start(bot, chatId, username, userSessions) {
       `➖ <b>Гайд</b> - <i>Как правильно заказать кроссовки</i>\n` +
       `➖ <b>Обратная связь</b> - <i>Нашел баг? Есть предложение?</i>\n\n` +
       `💬 Дополнительные команды --> <i>/commands</i>\n\n` +
-      `<i><b>Created by: </b>Anton Kamaev (<b><a href="https://t.me/YoKrossbot_log">YoKrossBot.log.</a></b>)\n@yokross_bot Alfa-version(v2)</i>`,
+      `<i><b>Created by: </b><b><a href="https://t.me/YoKrossbot_log">Anton Kamaev</a></b>.\n<b>Alfa-version.v3</b></i>`,
     parse_mode: 'HTML',
     reply_markup: JSON.stringify({
       inline_keyboard: [

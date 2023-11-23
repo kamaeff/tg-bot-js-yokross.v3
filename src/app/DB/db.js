@@ -186,6 +186,34 @@ async function select_photo(selectedPhoto) {
   }
 }
 
+
+async function addToOrder(data, size, chat_id) {
+  const connection = await createConnection()
+
+  try {
+    const [rows] = await connection.execute(
+      'SELECT name_shooes, gender_option FROM Updates WHERE name_shooes = ? AND size = ?',
+      [data, size]
+    )
+    const [user_gender] = await connection.execute('SELECT gender_option FROM users WHERE chat_id = ?',[chat_id])
+
+    if(rows[0].gender_option === user_gender[0].gender_option ){
+      const log = rows.map((row) => ({
+        name: row.name_shooes,
+        gender: row.gender_option,
+      }))
+      return log
+    }else {
+      return false
+    }
+
+  } catch (error) {
+    console.error('Произошла ошибка:', error)
+  } finally {
+    connection.end()
+  }
+}
+
 async function new_order(chat_id, order_id, name_shooes, size, price) {
   const connection = await createConnection()
   chat_id = chat_id.toString()
@@ -413,4 +441,5 @@ module.exports = {
   add_style,
   get_userStyle,
   get_currentOrder,
+  addToOrder,
 }

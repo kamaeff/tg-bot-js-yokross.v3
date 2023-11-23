@@ -26,6 +26,7 @@ const {
   get_userStyle,
   get_currentOrder,
   new_order,
+  addToOrder
 } = require('./DB/db')
 
 const { sendPhotoWithNavigation } = require('./func/carusel')
@@ -39,7 +40,7 @@ const {
   prev_photo_o,
   showorders,
 } = require('./func/orders-controller')
-const { showmenu, next_photo, prev_photo } = require('./func/show-controller')
+const { next_photo, prev_photo } = require('./func/show-controller')
 
 const userSessions = new Map()
 let userSession
@@ -71,12 +72,12 @@ const logger = winston.createLogger({
 
 async function brandChoice(bot, chatId, data, user_callBack, messageId) {
   const messageHandler = async msg => {
-    const log = await addToOrder(data, msg.text)
+    const log = await addToOrder(data, msg.text, chatId)
     const user = await get_userStyle(chatId)
 
     console.log(log)
 
-    if (parseInt(msg.text) && log != false) {
+    if (parseInt(msg.text) && log != false && log != undefined) {
       userSession = {
         size: msg.text,
         shooes_name: log[0].name,
@@ -134,7 +135,7 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
       await bot.sendMessage(
         chatId,
         `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${msg.text} us </i></b>бренд: <b><i>${data}</i></b>.\n\n` +
-        `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">✌🏼 YoKross!</a></b></i>`,
+        `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
         {
           reply_markup: JSON.stringify(keyboard),
           parse_mode: 'HTML',
