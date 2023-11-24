@@ -228,10 +228,6 @@ async function new_order(chat_id, order_id, name_shooes, size, price) {
         "Ожидание оплаты",
       ],
     );
-    await connection.execute(
-      "UPDATE Updates SET flag_order = ? WHERE name = ?",
-      [1, name_shooes],
-    );
     return true;
   } catch (error) {
     console.error("Произошла ошибка:", error);
