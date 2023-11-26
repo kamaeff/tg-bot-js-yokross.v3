@@ -45,7 +45,7 @@ async function add_user(user_Id, user_Name) {
 
     const [existingUser] = await connection.execute(
       "SELECT * FROM users WHERE chat_id = ?",
-      [newUser.chat_id],
+      [newUser.chat_id]
     );
 
     if (!existingUser.length) {
@@ -56,7 +56,7 @@ async function add_user(user_Id, user_Name) {
           newUser.username,
           newUser.orders_count,
           newUser.data_reg,
-        ],
+        ]
       );
       res = `${newUser.username} was add to database`;
     } else {
@@ -76,7 +76,7 @@ async function getProfile(chatId) {
   chatId = chatId.toString();
   const [rows, fields] = await connection.execute(
     "SELECT orders_count, bonus_count, locale FROM users WHERE chat_id = ?",
-    [chatId],
+    [chatId]
   );
   const res = rows.map((row) => ({
     orders: row.orders_count,
@@ -93,7 +93,7 @@ async function add_style(chatId, style) {
   try {
     const [rows] = await connection.execute(
       "UPDATE users SET style = ? WHERE chat_id = ?",
-      [style, chatId],
+      [style, chatId]
     );
 
     if (rows.affectedRows > 0) {
@@ -116,7 +116,7 @@ async function send_photo(photoName) {
   try {
     const [rows] = await connection.execute(
       "SELECT photo_path FROM photoStatic WHERE name = ?",
-      [photoName],
+      [photoName]
     );
 
     if (rows.length > 0) {
@@ -139,7 +139,7 @@ async function send_dynamic_add_photo() {
   try {
     const [rows] = await connection.execute(
       "SELECT photo_path, material,price,name,size,color, gender_option FROM Updates WHERE flag_order = ?",
-      [0],
+      [0]
     );
     if (rows.length > 0) {
       const photosWithDescriptions = rows.map((row) => ({
@@ -168,7 +168,7 @@ async function select_photo(selectedPhoto) {
   try {
     const [rows] = await connection.execute(
       "UPDATE Updates SET flag_order = ? WHERE photo_path = ?",
-      ["1", selectedPhoto.path],
+      ["1", selectedPhoto.path]
     );
 
     if (rows.affectedRows > 0) {
@@ -189,11 +189,11 @@ async function addToOrder(data, size, chat_id) {
   try {
     const [rows] = await connection.execute(
       "SELECT name_shooes, gender_option FROM Updates WHERE name_shooes = ? AND size = ?",
-      [data, size],
+      [data, size]
     );
     const [user_gender] = await connection.execute(
       "SELECT gender_option FROM users WHERE chat_id = ?",
-      [chat_id],
+      [chat_id]
     );
 
     if (rows[0].gender_option === user_gender[0].gender_option) {
@@ -226,7 +226,7 @@ async function new_order(chat_id, order_id, name_shooes, size, price) {
         size,
         price,
         "Ожидание оплаты",
-      ],
+      ]
     );
     return true;
   } catch (error) {
@@ -242,7 +242,7 @@ async function delOrder(chat_id, name) {
   try {
     await connection.execute(
       "UPDATE Updates SET flag_order = ? WHERE name = ?",
-      [0, name],
+      [0, name]
     );
     console.log(`Отмена заказа`);
     await connection.execute("DELETE FROM orders WHERE order_id = ?", [
@@ -261,20 +261,20 @@ async function add_gender(chat_id, gender) {
   try {
     const [check] = await connection.execute(
       "SELECT gender_option FROM users WHERE chat_id = ?",
-      [chat_id],
+      [chat_id]
     );
 
     if (check.length === 0 || !check[0].gender_option) {
       console.log("Колонка gender_option пуста.");
       await connection.execute(
         "UPDATE users SET gender_option = ? WHERE chat_id = ?",
-        [gender, chat_id],
+        [gender, chat_id]
       );
     } else {
       console.log("не пусто");
       await connection.execute(
         "UPDATE users SET gender_option = ? WHERE chat_id = ?",
-        [gender, chat_id],
+        [gender, chat_id]
       );
     }
   } catch (error) {
@@ -289,7 +289,7 @@ async function get_gender(name_shooes, size, style, gender) {
   try {
     const [res] = await connection.execute(
       "SELECT photo_path, material,price,name,size,color,gender_option, style FROM Updates WHERE gender_option = ? AND size = ? AND style = ? AND name_shooes = ?",
-      [gender, size, style, name_shooes],
+      [gender, size, style, name_shooes]
     );
     const resault = res.map((row) => ({
       path: row.photo_path,
@@ -319,7 +319,7 @@ async function get_userStyle(chatId) {
 
   const [res] = await connection.execute(
     "SELECT style, gender_option FROM users WHERE chat_id = ?",
-    [chatId],
+    [chatId]
   );
   const resault = res.map((row) => ({
     style: row.style,
@@ -359,7 +359,7 @@ async function past_orders(chat_id) {
   const connection = await createConnection();
   const [res] = await connection.execute(
     "SELECT name_kross FROM orders WHERE chat_id = ? AND ordered = ?",
-    [chat_id, "Доставлено"],
+    [chat_id, "Доставлено"]
   );
 
   const resultArray = [];
@@ -367,7 +367,7 @@ async function past_orders(chat_id) {
   for (const order of res) {
     const [shooes] = await connection.execute(
       "SELECT photo_path, material, price, name, size, color FROM Updates WHERE name = ?",
-      [order.name_kross],
+      [order.name_kross]
     );
 
     if (shooes.length > 0) {
@@ -394,15 +394,15 @@ async function update_bonus(selectedPhoto, chat_id) {
   const connection = await createConnection();
   const [rows] = await connection.execute(
     "SELECT price FROM Updates WHERE name = ?",
-    [selectedPhoto.name],
+    [selectedPhoto.name]
   );
   const [user] = await connection.execute(
     "SELECT orders_count, bonus_count FROM users WHERE chat_id = ?",
-    [chat_id],
+    [chat_id]
   );
   await connection.execute(
     "UPDATE orders SET order_status = ? WHERE name_kross = ?",
-    ["Оплачено", selectedPhoto.name],
+    ["Оплачено", selectedPhoto.name]
   );
 
   let bonus = user[0].bonus_count + (rows[0].price / 100) * 3;
@@ -410,7 +410,7 @@ async function update_bonus(selectedPhoto, chat_id) {
 
   await connection.execute(
     "UPDATE users SET bonus_count = ?, orders_count = ? WHERE chat_id = ?",
-    [bonus, orders_count, chat_id],
+    [bonus, orders_count, chat_id]
   );
   orders_count = 0;
   bonus = 0;
@@ -422,13 +422,13 @@ async function get_currentOrder(chat_id) {
   try {
     const [rows] = await connection.execute(
       "SELECT name_kross FROM orders WHERE chat_id = ? AND order_status = ? AND ordered = ?",
-      [chat_id, "Оплачено", "Отправка"],
+      [chat_id, "Оплачено", "Доставка"]
     );
 
     if (rows[0].name_kross) {
       const [shooes] = await connection.execute(
         "SELECT * FROM Updates WHERE name = ?",
-        [rows[0].name_kross],
+        [rows[0].name_kross]
       );
       const result = shooes.map((row) => ({
         path: row.photo_path,

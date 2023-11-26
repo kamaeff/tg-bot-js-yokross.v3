@@ -54,8 +54,8 @@ const logger = winston.createLogger({
       format: "YYYY-MM-DD HH:mm:ss",
     }),
     winston.format.printf(
-      (info) => `${info.timestamp} ${info.level}: ${info.message}`,
-    ),
+      (info) => `${info.timestamp} ${info.level}: ${info.message}`
+    )
   ),
   transports: [
     new winston.transports.Console(),
@@ -87,7 +87,7 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
         userSession.shooes_name,
         userSession.size,
         userSession.style,
-        userSession.gender,
+        userSession.gender
       );
 
       if (userSession) {
@@ -111,11 +111,11 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
           currentIndex,
           firstPhoto,
           totalPhotos,
-          showPrevButton,
+          showPrevButton
         );
 
         logger.info(
-          `Size: ${msg.text} us for ${user_callBack} of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${user[0].style}\n. Success, Output: ${res.length}\n`,
+          `Size: ${msg.text} us for ${user_callBack} of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${user[0].style}\n. Success, Output: ${res.length}\n`
         );
       }
     } else {
@@ -131,11 +131,11 @@ async function brandChoice(bot, chatId, data, user_callBack, messageId) {
       await bot.sendMessage(
         chatId,
         `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${msg.text} us </i></b>бренд: <b><i>${data}</i></b>.\n\n` +
-        `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
+          `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
         {
           reply_markup: JSON.stringify(keyboard),
           parse_mode: "HTML",
-        },
+        }
       );
     }
     bot.off("message", messageHandler);
@@ -173,10 +173,10 @@ module.exports = (bot) => {
         await bot.sendMessage(
           chatId,
           `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
-          `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
-          `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
-          `➖ <b>/locale</b> - <i>Отправить геолокацию</i>`,
-          { parse_mode: "HTML" },
+            `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
+            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
+            `➖ <b>/locale</b> - <i>Отправить геолокацию</i>`,
+          { parse_mode: "HTML" }
         );
         break;
 
@@ -198,8 +198,8 @@ module.exports = (bot) => {
         bot.sendMessage(
           chatId,
           `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
-          `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>`,
-          { parse_mode: "HTML" },
+            `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>`,
+          { parse_mode: "HTML" }
         );
         break;
     }
@@ -234,9 +234,9 @@ module.exports = (bot) => {
         bot.sendMessage(
           chatId,
           "<i><b>Snippets</b></i>\n\n" +
-          `➖ <b><i>Сниппет правил:</i></b>\n` +
-          `<b><i><a href = "https://telegra.ph/Pravila-chata-11-06-17">📑 Правила чата</a></i></b>\n⁉️ Уважение трудно заработать, но легко потерять.`,
-          { parse_mode: "HTML" },
+            `➖ <b><i>Сниппет правил:</i></b>\n` +
+            `<b><i><a href = "https://telegra.ph/Pravila-chata-11-06-17">📑 Правила чата</a></i></b>\n⁉️ Уважение трудно заработать, но легко потерять.`,
+          { parse_mode: "HTML" }
         );
         break;
 
@@ -256,7 +256,7 @@ module.exports = (bot) => {
                   [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
                 ],
               }),
-            },
+            }
           );
           break;
         }
@@ -357,9 +357,10 @@ module.exports = (bot) => {
               caption:
                 `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
                 `● <b>Всего заказов сделано:</b> <i>${userSession.orders}</i>\n` +
-                `● <b>Твоя геолокация:</b> <i>${userSession.locale.length === 0
-                  ? "Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, отправь --> /locale"
-                  : userSession.locale
+                `● <b>Твоя геолокация:</b> <i>${
+                  userSession.locale.length === 0
+                    ? "Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, отправь --> /locale"
+                    : userSession.locale
                 }</i>\n` +
                 `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>`,
 
@@ -369,9 +370,9 @@ module.exports = (bot) => {
 
             logger.info(
               `${msg.message.chat.first_name} profile.\n` +
-              `All orders: ${userSession.orders}\n` +
-              `Geo: ${userSession.locale}\n` +
-              `Bonuses: ${userSession.bonuses}`,
+                `All orders: ${userSession.orders}\n` +
+                `Geo: ${userSession.locale}\n` +
+                `Bonuses: ${userSession.bonuses}`
             );
           }
         }
@@ -384,11 +385,11 @@ module.exports = (bot) => {
           bot.sendMessage(
             chatId,
             `<b><i>${msg.message.chat.first_name}</i></b>, сейчас тебе ничего не доставляется!\n\n` +
-            `😔 Воспользуйся поиском кроссовок или можешь посмотреть что у нас есть.`,
+              `😔 Воспользуйся поиском кроссовок или можешь посмотреть что у нас есть.`,
             {
               parse_mode: "HTML",
               reply_markup: JSON.stringify(chatOptions_profile),
-            },
+            }
           );
         } else {
           await showorders(
@@ -397,7 +398,7 @@ module.exports = (bot) => {
             chatId,
             userSession,
             userSessions,
-            msg,
+            msg
           );
         }
         break;
@@ -452,7 +453,7 @@ module.exports = (bot) => {
               {
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify(keyboard),
-              },
+              }
             );
           } else {
             if (!userSession) {
@@ -479,7 +480,7 @@ module.exports = (bot) => {
                 currentIndex,
                 firstPhoto,
                 totalPhotos,
-                showPrevButton,
+                showPrevButton
               );
             }
           }
@@ -521,7 +522,7 @@ module.exports = (bot) => {
           userSession.order_id,
           userSession.name,
           userSession.size,
-          userSession.price,
+          userSession.price
         );
         if (addting === true) {
           console.log(`${userSession.order_id} was added`);
@@ -547,10 +548,13 @@ module.exports = (bot) => {
               [
                 {
                   text: `💸 Оплатить заказ #${userSession.order_id}`,
-                  url: "https://yokrossbot.ru/",
+                  url: `https://yokrossbot.ru/payanyway.php?orderId=${userSession.order_id}`,
                 },
               ],
-              [{ text: "✅ Я оплатил", callback_data: "payment" }],
+              [
+                { text: "✅ Я оплатил", callback_data: "payment" },
+                { text: "🏠 Главное меню", callback_data: "home" },
+              ],
             ],
           }),
         });
@@ -593,7 +597,7 @@ module.exports = (bot) => {
         await select_photo(selectedPhoto);
         await update_bonus(selectedPhoto, chatId);
         logger.info(
-          `User ${msg.message.chat.first_name} paid and update bonuses.`,
+          `User ${msg.message.chat.first_name} paid and update bonuses.`
         );
         break;
     }
