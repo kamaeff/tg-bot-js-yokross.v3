@@ -75,7 +75,7 @@ async function getProfile(chatId) {
   const connection = await createConnection();
   chatId = chatId.toString();
   const [rows, fields] = await connection.execute(
-    "SELECT orders_count, bonus_count, locale, email FROM users WHERE chat_id = ?",
+    "SELECT orders_count, bonus_count, locale, email, FIO FROM users WHERE chat_id = ?",
     [chatId]
   );
   const res = rows.map((row) => ({
@@ -83,6 +83,7 @@ async function getProfile(chatId) {
     bonus: row.bonus_count,
     locale: row.locale,
     email: row.email,
+    fio: row.FIO,
   }));
   return res;
 }
@@ -213,25 +214,32 @@ async function addToOrder(data, size, chat_id) {
   }
 }
 
-async function new_order(chat_id, order_id, name_shooes, size, price) {
+async function new_order(
+  chat_id,
+  order_id,
+  name_shooes,
+  size,
+  price,
+  address,
+  email,
+  fio
+) {
   const connection = await createConnection();
   chat_id = chat_id.toString();
   try {
-    vonst[email] = await connection.execute(
-      "SELECT email FROM users WHERE chat_id =?",
-      [chat_id]
-    );
     await connection.execute(
-      "INSERT INTO orders (chat_id, order_id, order_status, name_kross, size, price, ordered, email) VALUES (?,?,?,?,?,?,?,?)",
+      "INSERT INTO orders (chat_id, order_id, order_status, adress, FIO, name_kross, size, price, ordered, email) VALUES (?,?,?,?,?,?,?,?,?,?)",
       [
         chat_id,
         order_id,
         "Не оплачено",
+        address,
+        fio,
         name_shooes,
         size,
         price,
         "Ожидание оплаты",
-        email[0].email,
+        email,
       ]
     );
     return true;
@@ -467,16 +475,42 @@ async function add_email(chat_id, email) {
   }
 }
 
-async function add_location(chat_id, latitude, longitude) {
+async function add_location(chat_id, address) {
   const connection = await createConnection();
-  longitude = longitude.toString();
-  latitude = latitude.toString();
 
   try {
     await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
-      latitude + "," + longitude,
+      address,
       chat_id,
     ]);
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
+async function add_fio(chat_id, fio) {
+  const connection = await createConnection();
+  try {
+    await connection.execute("UPDATE users SET FIO =? WHERE chat_id =?", [
+      fio,
+      chat_id,
+    ]);
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
+async function add_to_order(chat_id, address, email, fio) {
+  const connection = await createConnection();
+  try {
+    await connection.execute(
+      "INSERT INTO orders (chat_id, adress, email, FIO) VALUES (?,?,?,?)",
+      [chat_id, address, email, fio]
+    );
     return true;
   } catch (error) {
     console.log(error);
@@ -504,4 +538,6 @@ module.exports = {
   addToOrder,
   add_email,
   add_location,
+  add_fio,
+  add_to_order,
 };

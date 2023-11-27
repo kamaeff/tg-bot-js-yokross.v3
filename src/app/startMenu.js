@@ -29,6 +29,8 @@ const {
   addToOrder,
   add_email,
   add_location,
+  add_fio,
+  add_to_order,
 } = require("./DB/db");
 
 const { sendPhotoWithNavigation } = require("./func/carusel");
@@ -50,6 +52,7 @@ let selectedPhoto = 0;
 const YokrossId = "@yokross12";
 let check;
 const geocodingEndpoint = "https://geocode-maps.yandex.ru/1.x/";
+let messageHandler;
 
 const logger = winston.createLogger({
   level: "info",
@@ -72,58 +75,6 @@ const logger = winston.createLogger({
     }),
   ],
 });
-
-async function getAddressByCoordinates(latitude, longitude) {
-  try {
-    const response = await axios.get(geocodingEndpoint, {
-      params: {
-        apikey: process.env.APIKEY,
-        geocode: `${longitude},${latitude}`,
-        format: "json",
-      },
-    });
-
-    const feature = response.data.response.GeoObjectCollection.featureMember[0];
-    const addressDetails =
-      feature.GeoObject.metaDataProperty.GeocoderMetaData.AddressDetails;
-
-    // Получаем информацию о городе
-    const city =
-      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
-        ?.LocalityName || "";
-
-    // Получаем информацию о районе
-    const district =
-      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
-        ?.DependentLocality?.DependentLocalityName || "";
-
-    // Получаем информацию о улице
-    const street =
-      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
-        ?.Thoroughfare?.ThoroughfareName ||
-      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
-        ?.DependentLocality?.Thoroughfare?.ThoroughfareName ||
-      "";
-
-    // Сформируем полный адрес
-    const fullAddress = `${city}, ${district}, ${street}`;
-
-    return fullAddress.trim();
-  } catch (error) {
-    console.error("Ошибка при получении адреса:", error.message);
-    throw error;
-  }
-}
-
-function extractComponent(addressDetails, componentName) {
-  const component =
-    addressDetails.Country.AdministrativeArea?.SubAdministrativeArea
-      ?.Locality?.[componentName] ||
-    addressDetails.Country.AdministrativeArea?.Locality?.[componentName] ||
-    "";
-
-  return component;
-}
 
 async function brandChoice(bot, chatId, data, user_callBack, messageId) {
   const messageHandler = async (msg) => {
@@ -297,31 +248,43 @@ module.exports = (bot) => {
         break;
 
       case "locale":
-        const keyboard = {
-          reply_markup: {
-            keyboard: [
-              [
-                {
-                  text: "Отправить геолокацию",
-                  request_location: true,
-                },
-              ],
-            ],
-            resize_keyboard: true,
-          },
+        bot.deleteMessage(chatId, messageId);
+
+        messageHandler = async (msg) => {
+          try {
+            userSessions.get(chatId, userSession);
+            userSession = {
+              address: msg.text,
+            };
+
+            await add_location(chatId, userSession.address);
+
+            bot.sendMessage(
+              chatId,
+              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлена новый адресс ПВЗ <b><i>${msg.text}</i></b>`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify(chatOptions_profile),
+              }
+            );
+          } catch (e) {
+            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
+          }
+          bot.off("message", messageHandler);
         };
+
+        bot.on("message", messageHandler);
 
         bot.sendMessage(
           chatId,
-          "Нажмите кнопку, чтобы отправить геолокацию:",
-          keyboard
+          `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе:`
         );
         break;
 
       case "email":
         bot.deleteMessage(chatId, messageId);
 
-        const messageHandler = async (msg) => {
+        messageHandler = async (msg) => {
           try {
             userSessions.get(chatId, userSession);
             userSession = {
@@ -348,6 +311,40 @@ module.exports = (bot) => {
         bot.sendMessage(
           chatId,
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
+          { parse_mode: "HTML" }
+        );
+        break;
+
+      case "fio":
+        bot.deleteMessage(chatId, messageId);
+
+        messageHandler = async (msg) => {
+          try {
+            userSessions.get(chatId, userSession);
+            userSession = {
+              fio: msg.text,
+            };
+            await add_fio(chatId, userSession.fio);
+
+            bot.sendMessage(
+              chatId,
+              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлено ФИО получателя: <b><i>${msg.text}</i></b>`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify(chatOptions_profile),
+              }
+            );
+          } catch (e) {
+            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
+          }
+          bot.off("message", messageHandler);
+        };
+
+        bot.on("message", messageHandler);
+
+        bot.sendMessage(
+          chatId,
+          `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свой ФИО (это надо для заполнения получателя при доставке)`,
           { parse_mode: "HTML" }
         );
         break;
@@ -453,6 +450,8 @@ module.exports = (bot) => {
         break;
 
       case "profile":
+        bot.deleteMessage(chatId, messageId);
+
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           const profileData = await getProfile(chatId);
@@ -463,17 +462,23 @@ module.exports = (bot) => {
               locale: profile.locale,
               bonuses: profile.bonus,
               email: profile.email,
+              fio: profile.fio,
             };
             userSessions.set(chatId, userSession);
 
             await bot.sendPhoto(chatId, "./src/app/img/profile.jpg", {
               caption:
                 `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
+                `● <b>ФИО:</b> <i>${
+                  userSession.fio.length === 0
+                    ? `\nЯ только знаю как тебя зовут.\nДобавь свое ФИО <b>👤 Заполнить ФИО"</b>`
+                    : userSession.fio
+                }</i>\n` +
                 `● <b>Всего заказов сделано:</b> <i>${userSession.orders}</i>\n` +
                 `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>\n` +
-                `● <b>Твоя геолокация:</b> <i>${
+                `● <b>Адрес ПВЗ Boxberry:</b> <i>${
                   userSession.locale.length === 0
-                    ? `\nПока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, нажми на --> <b>🌐 Отправить геолокацию</b>`
+                    ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>🌐 Заполнить адресс ПВЗ</b>`
                     : userSession.locale
                 }</i>\n` +
                 `● <b>Email:</b> <i>${
@@ -499,16 +504,25 @@ module.exports = (bot) => {
                     {
                       text:
                         userSession.locale.length === 0
-                          ? "🌐 Отправить геолакацию"
+                          ? "🌐 Заполнить адресс ПВЗ"
                           : "",
                       callback_data: "locale",
                     },
+                  ],
+                  [
                     {
                       text:
                         userSession.email.length === 0
                           ? "✉️ Заполнить почту"
                           : "",
                       callback_data: "email",
+                    },
+                  ],
+                  [
+                    {
+                      text:
+                        userSession.fio.length === 0 ? "👤 Заполнить ФИО" : "",
+                      callback_data: "fio",
                     },
                   ],
                   [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
@@ -650,38 +664,80 @@ module.exports = (bot) => {
         break;
 
       case "order":
+        bot.deleteMessage(chatId, messageId);
+        userSessions.get(chatId, userSession);
+        if (userSession && userSession.photos) {
+          selectedPhoto = userSession.photos[userSession.currentIndex];
+        } else {
+          console.error("userSession or photos is undefined or null.");
+        }
+
         const profileData = await getProfile(chatId);
         if (profileData.length > 0) {
           const profile = profileData[0];
           userSession = {
+            order_id: chatId + Date.now(),
+            name: selectedPhoto.name,
+            size: selectedPhoto.size,
+            price: selectedPhoto.price,
             locale: profile.locale,
             email: profile.email,
+            fio: profile.fio,
           };
-          userSessions.set(chatId, userSession);
-          console.log(userSession.locale, userSession.email);
 
-          if (userSession.locale && userSession.email) {
-            await tech(bot, chatId, msg.message.chat.first_name);
-            const [latitude, longitude] = userSession.locale
-              .split(",")
-              .map((coord) => parseFloat(coord.trim()));
-            const str = await getAddressByCoordinates(latitude, longitude);
-            console.log(latitude, longitude);
-            console.log(str);
+          userSessions.set(chatId, userSession);
+          logger.info(userSession.locale, userSession.email, userSession.fio);
+
+          if (userSession.locale && userSession.email && userSession.fio) {
+            const addting = await new_order(
+              chatId,
+              userSession.order_id,
+              userSession.name,
+              userSession.size,
+              userSession.price,
+              userSession.locale,
+              userSession.email,
+              userSession.fio
+            );
+            bot.sendPhoto(chatId, selectedPhoto.path, {
+              caption:
+                `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
+                `✌🏼 <b>Получатель: </b><i>${userSession.fio}</i>\n` +
+                `🚚 <b>ПВЗ Boxberry: </b><i>${userSession.locale}</i>\n` +
+                `✉️ я<b>Email для отправки чека: </b><i>${userSession.email}</i>\n\n` +
+                `👟 <b>Кроссовки <i>${selectedPhoto.name}</i></b>\n\n` +
+                `🧵 <b>Характеристики:</b>\n\n` +
+                `➖ <b>Цвет:</b> <i>${selectedPhoto.color}</i>\n` +
+                `➖ <b>Материал:</b> <i>${selectedPhoto.material}</i>\n` +
+                `➖ <b>Размер:</b> <i>${selectedPhoto.size} us</i>\n\n` +
+                `💸 <b>Цена:</b> <code>${selectedPhoto.price}₽</code>\n\n` +
+                `Yo <i>${msg.message.chat.first_name}</i>, перед тем как оплатить прочитай <i><b>📑 Договор оферты</b></i>`,
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "📑 Договор оферты",
+                      url: "https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27",
+                    },
+                  ],
+                  [
+                    {
+                      text: `💸 Оплатить заказ #${userSession.order_id}`,
+                      url: `https://yokrossbot.ru/payanyway.php?orderId=${userSession.order_id}`,
+                    },
+                  ],
+                  [
+                    { text: "✅ Я оплатил", callback_data: "payment" },
+                    { text: "🧨 Отменить заказ", callback_data: "home" },
+                  ],
+                ],
+              }),
+            });
           } else {
-            console.log(userSession.locale, userSession.email);
             bot.sendMessage(
               chatId,
-              `<i>${
-                userSession.locale.length === 0
-                  ? `Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, нажми на --> <b>🌐 Отправить геолокацию</b>`
-                  : ""
-              }</i>\n` +
-                `<i>${
-                  userSession.email.length === 0
-                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить почту</b>, чтобы заполнить почту`
-                    : ""
-                }</i>`,
+              `<i><b>✌🏼 Yo ${msg.message.chat.first_name}</b></i>, кажется ты не заполнил информацию о себе. Давай исправим!\n<i>После заполнения возвращайся!</i>`,
               {
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify({
@@ -689,15 +745,26 @@ module.exports = (bot) => {
                     [
                       {
                         text:
-                          userSession.locale.length === 0
-                            ? "🌐 Отправить геолакацию"
+                          userSession.email.length === 0
+                            ? "✉️ Заполнить почту"
+                            : "",
+                        callback_data: "email",
+                      },
+                    ],
+                    [
+                      {
+                        text:
+                          userSession.adress.length === 0
+                            ? "🌐 Заполнить адресс ПВЗ"
                             : "",
                         callback_data: "locale",
                       },
+                    ],
+                    [
                       {
                         text:
-                          userSession.email.length === 0
-                            ? "✉️ Заполнить почту"
+                          userSession.fio.length === 0
+                            ? "👤 Заполнить ФИО"
                             : "",
                         callback_data: "email",
                       },
@@ -714,66 +781,6 @@ module.exports = (bot) => {
             );
           }
         }
-
-        break;
-
-      case "yes":
-        bot.deleteMessage(chatId, messageId);
-        userSessions.get(chatId, userSession);
-        if (userSession && userSession.photos) {
-          selectedPhoto = userSession.photos[userSession.currentIndex];
-        } else {
-          console.error("userSession or photos is undefined or null.");
-        }
-
-        userSession = {
-          order_id: chatId + Date.now(),
-          name: selectedPhoto.name,
-          size: selectedPhoto.size,
-          price: selectedPhoto.price,
-        };
-
-        const addting = await new_order(
-          chatId,
-          userSession.order_id,
-          userSession.name,
-          userSession.size,
-          userSession.price
-        );
-        if (addting === true) {
-          console.log(`${userSession.order_id} was added`);
-        }
-        await bot.sendPhoto(chatId, selectedPhoto.path, {
-          caption:
-            `👟 <b>Кроссовки <i>${selectedPhoto.name}</i></b>\n\n` +
-            `🧵 <b>Характеристики:</b>\n\n` +
-            `➖ <b>Цвет:</b> <i>${selectedPhoto.color}</i>\n` +
-            `➖ <b>Материал:</b> <i>${selectedPhoto.material}</i>\n` +
-            `➖ <b>Размер:</b> <i>${selectedPhoto.size} us</i>\n\n` +
-            `💸 <b>Цена:</b> <code>${selectedPhoto.price}₽</code>\n\n` +
-            `Yo <i>${msg.message.chat.first_name}</i>, перед тем как оплатить прочитай <i><b>📑 Договор оферты</b></i>`,
-          parse_mode: "HTML",
-          reply_markup: JSON.stringify({
-            inline_keyboard: [
-              [
-                {
-                  text: "📑 Договор оферты",
-                  url: "https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27",
-                },
-              ],
-              [
-                {
-                  text: `💸 Оплатить заказ #${userSession.order_id}`,
-                  url: `https://yokrossbot.ru/payanyway.php?orderId=${userSession.order_id}`,
-                },
-              ],
-              [
-                { text: "✅ Я оплатил", callback_data: "payment" },
-                { text: "🏠 Главное меню", callback_data: "home" },
-              ],
-            ],
-          }),
-        });
 
         break;
 
@@ -812,44 +819,6 @@ module.exports = (bot) => {
           `User ${msg.message.chat.first_name} paid and update bonuses.`
         );
         break;
-    }
-  });
-
-  bot.on("location", async (msg) => {
-    const chatId = msg.chat.id;
-    userSession = {
-      latitude: msg.location.latitude,
-      longitude: msg.location.longitude,
-    };
-
-    const ch = await add_location(
-      chatId,
-      userSession.latitude,
-      userSession.longitude
-    );
-
-    const str = await getAddressByCoordinates(
-      userSession.latitude,
-      userSession.longitude
-    );
-    if (ch === true) {
-      bot.sendMessage(
-        chatId,
-        `<b><i>Yo ${msg.chat.first_name}</i></b>, ты отправили геолокацию: ${str}`,
-        {
-          parse_mode: "HTML",
-          reply_markup: JSON.stringify(chatOptions_profile),
-        }
-      );
-    } else {
-      bot.sendMessage(
-        chatId,
-        `<b><i>Yo ${msg.chat.first_name}</i></b>, я не смог распознать геолокацию`,
-        {
-          parse_mode: "HTML",
-          reply_markup: JSON.stringify(chatOptions_profile),
-        }
-      );
     }
   });
 };

@@ -27,10 +27,7 @@ const admin_btns = {
 
 const chatOptions_profile = {
   inline_keyboard: [
-    [
-      { text: "🔎 Поиск пары", callback_data: "choose" },
-      { text: "⚡️ ShowRoom", callback_data: "show" },
-    ],
+    [{ text: "✌🏼 Мой профиль", callback_data: "profile" }],
     [
       {
         text: "🏠 Выход в главное меню",
