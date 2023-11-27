@@ -19,7 +19,9 @@ async function start(bot, chatId, username, userSessions) {
       `➖ <b>Мой профиль</b> - <i>Инфа о твоем профиле</i>\n` +
       `➖ <b>Гайд</b> - <i>Как правильно заказать кроссовки</i>\n` +
       `➖ <b>Обратная связь</b> - <i>help@yokrossbot.ru</i>\n\n` +
-      `💬 Дополнительные команды --> <i>/commands</i>\n\n` +
+      `<b><i>💬 Полезное:</i></b> \n` +
+      `<i><b><a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27">➖ Договор оферты</a></b></i>\n` +
+      `➖ /commands <i>(Дополнительные команды)</i>\n\n` +
       `<i><b>Created by: </b><b><a href="https://t.me/YoKrossbot_log">Anton Kamaev</a></b>.\n<b>Alfa-version.v3</b></i>`,
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
@@ -77,7 +79,7 @@ async function check_folow(YokrossId, chatId, bot, username) {
       await bot.sendPhoto(chatId, "./src/app/img/profile_second.jpg", {
         caption:
           `✌🏼 Yo <i><b>${username}</b></i>, я помогу подобрать тебе кроссовки, чтобы воспользоваться моими функциями, подпишись на нашу группу <b><i><a href='https://t.me/yokross12'> YoKross</a></i></b> !` +
-          `\n\nТак же обязательно прочитай <b><i><a href='https://t.me/yokrossguide12/3'>Пользовательское соглашение</a></i></b> !\n\n` +
+          `\n\nТак же обязательно прочитай <b><i><a href='https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27'>Договор оферты</a></i></b> !\n\n` +
           `После выполнения всех требований --> <i><b>Я прочитал и подписался</b></i>\n\n`,
         parse_mode: "HTML",
         reply_markup: JSON.stringify({
@@ -85,8 +87,8 @@ async function check_folow(YokrossId, chatId, bot, username) {
             [{ text: "✌🏼 YoKross", url: "https://t.me/yokross12" }],
             [
               {
-                text: "📑 Пользовательское соглашение",
-                url: "https://t.me/yokrossguide12/3",
+                text: "📑 Договор оферты",
+                url: "https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27",
               },
             ],
             [
