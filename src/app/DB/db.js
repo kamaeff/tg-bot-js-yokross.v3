@@ -351,7 +351,10 @@ const csvWriter = createCsvWriter({
     { id: "adress", title: "Address" },
     { id: "name", title: "Name" },
     { id: "name_kross", title: "Cross Name" },
+    { id: "size", title: "Size" },
     { id: "price", title: "Price" },
+    { id: "ordered", title: "Ordered" },
+    { id: "email", title: "Email" },
   ],
 });
 async function createPDF() {
@@ -518,6 +521,33 @@ async function add_to_order(chat_id, address, email, fio) {
   }
 }
 
+async function check_payment(chat_id) {
+  const connection = await createConnection();
+  try {
+    const [rows] = await connection.execute(
+      "SELECT * FROM orders WHERE chat_id =? AND order_status =? AND ordered =?",
+      [chat_id, "Оплачено", "Доставка"]
+    );
+
+    if (rows.length > 0) {
+      const result = shooes.map((row) => ({
+        order_id: row.order_id,
+        order_status: row.order_status,
+        ordered: row.ordered,
+        name: row.name_kross,
+        size: row.size,
+        price: row.price,
+        email: row.email,
+      }));
+      return result;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+}
+
 module.exports = {
   add_user,
   send_photo,
@@ -540,4 +570,5 @@ module.exports = {
   add_location,
   add_fio,
   add_to_order,
+  check_payment,
 };

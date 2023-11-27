@@ -31,6 +31,7 @@ const {
   add_location,
   add_fio,
   add_to_order,
+  check_payment,
 } = require("./DB/db");
 
 const { sendPhotoWithNavigation } = require("./func/carusel");
@@ -533,8 +534,10 @@ module.exports = (bot) => {
             logger.info(
               `${msg.message.chat.first_name} profile.\n` +
                 `All orders: ${userSession.orders}\n` +
+                `Bonuses: ${userSession.bonuses}\n` +
                 `Geo: ${userSession.locale}\n` +
-                `Bonuses: ${userSession.bonuses}`
+                `Email: ${userSession.email}\n` +
+                `Fio: ${userSession.fio}`
             );
           }
         }
@@ -754,7 +757,7 @@ module.exports = (bot) => {
                     [
                       {
                         text:
-                          userSession.adress.length === 0
+                          userSession.locale.length === 0
                             ? "🌐 Заполнить адресс ПВЗ"
                             : "",
                         callback_data: "locale",
@@ -794,30 +797,57 @@ module.exports = (bot) => {
         }
 
         // todo payment check
-        console.log(userSession.order_id);
+        const res = check_payment(chatId);
 
-        await tech(bot, chatId, msg.message.chat.first_name);
+        if (res != false) {
+          bot.sendMessage(
+            chatId,
+            `🤑 Yo <b><i>${msg.message.chat.first_name}</i></b>, оплата прошла успешно. В скором времени тебе отправится чек на почту!\n` +
+              `Так же в скором времени у тебя в профиле появится трек номер для отслеживания твоей посылки.\n\n`,
+            {
+              parse_mode: "HTML",
+            }
+          );
 
-        await createPDF();
-        const fileStream = fs.createReadStream("output.csv");
+          await createPDF();
+          const fileStream = fs.createReadStream("output.csv");
 
-        /*bot.sendPhoto(process.env.GROUP_ADMIN, selectedPhoto.path, {
-          caption:
-            `<b>🤑 Status</b>: <i> Новый оплаченный заказ</i>\n` +
-            `@DreasTamyot новый заказ от ${msg.message.chat.first_name} (${chatId})\n\n` +
-            `Кроссовки: <i>${selectedPhoto.name}</i>\n` +
-            `Размер: <i>${selectedPhoto.size} us</i>\n` +
-            `Цена: <i>${selectedPhoto.price}Р</i>\n\n` +
-            `Тг ссылка на пользователя: <i><b>@${user_callBack}</b></i>`,
-          parse_mode: 'HTML',
-        })
-        bot.sendDocument(process.env.GROUP_ADMIN, fileStream)*/
+          bot.sendPhoto(process.env.GROUP_ADMIN, selectedPhoto.path, {
+            caption:
+              `<b>🤑 Status</b>: <i> Новый оплаченный заказ</i>\n` +
+              `@DreasTamyot новый заказ от ${msg.message.chat.first_name} (${chatId})\n\n` +
+              `Кроссовки: <i>${selectedPhoto.name}</i>\n` +
+              `Размер: <i>${selectedPhoto.size} us</i>\n` +
+              `Цена: <i>${selectedPhoto.price}Р</i>\n\n` +
+              `Тг ссылка на пользователя: <i><b>@${user_callBack}</b></i>`,
+            parse_mode: "HTML",
+          });
+          bot.sendDocument(process.env.GROUP_ADMIN, fileStream);
 
-        await select_photo(selectedPhoto);
-        await update_bonus(selectedPhoto, chatId);
-        logger.info(
-          `User ${msg.message.chat.first_name} paid and update bonuses.`
-        );
+          await select_photo(selectedPhoto);
+          await update_bonus(selectedPhoto, chatId);
+          logger.info(
+            `User ${msg.message.chat.first_name} paid and update bonuses.`
+          );
+        } else {
+          bot.sendMessage(
+            chatId,
+            `<i><b>Yo ${msg.message.chat.first_name}</b></i>, кажется ты не оплачивал заказ.</i>`,
+            {
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "🏠 Выход в главное меню",
+                      callback_data: "home",
+                    },
+                  ],
+                ],
+              }),
+            }
+          );
+        }
         break;
     }
   });
