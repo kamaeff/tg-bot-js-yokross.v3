@@ -827,10 +827,15 @@ module.exports = (bot) => {
       userSession.latitude,
       userSession.longitude
     );
+
+    const str = await getAddressByCoordinates(
+      userSession.latitude,
+      userSession.longitude
+    );
     if (ch === true) {
       bot.sendMessage(
         chatId,
-        `<b><i>Yo ${msg.chat.first_name}</i></b>, ты отправили геолокацию: ${userSession.latitude}, ${userSession.longitude}`,
+        `<b><i>Yo ${msg.chat.first_name}</i></b>, ты отправили геолокацию: ${str}`,
         {
           parse_mode: "HTML",
           reply_markup: JSON.stringify(chatOptions_profile),
