@@ -75,13 +75,14 @@ async function getProfile(chatId) {
   const connection = await createConnection();
   chatId = chatId.toString();
   const [rows, fields] = await connection.execute(
-    "SELECT orders_count, bonus_count, locale FROM users WHERE chat_id = ?",
+    "SELECT orders_count, bonus_count, locale, email FROM users WHERE chat_id = ?",
     [chatId]
   );
   const res = rows.map((row) => ({
     orders: row.orders_count,
     bonus: row.bonus_count,
     locale: row.locale,
+    email: row.email,
   }));
   return res;
 }
@@ -216,8 +217,12 @@ async function new_order(chat_id, order_id, name_shooes, size, price) {
   const connection = await createConnection();
   chat_id = chat_id.toString();
   try {
+    vonst[email] = await connection.execute(
+      "SELECT email FROM users WHERE chat_id =?",
+      [chat_id]
+    );
     await connection.execute(
-      "INSERT INTO orders (chat_id, order_id, order_status, name_kross, size, price, ordered) VALUES (?,?,?,?,?,?,?)",
+      "INSERT INTO orders (chat_id, order_id, order_status, name_kross, size, price, ordered, email) VALUES (?,?,?,?,?,?,?,?)",
       [
         chat_id,
         order_id,
@@ -226,6 +231,7 @@ async function new_order(chat_id, order_id, name_shooes, size, price) {
         size,
         price,
         "Ожидание оплаты",
+        email[0].email,
       ]
     );
     return true;
@@ -447,6 +453,37 @@ async function get_currentOrder(chat_id) {
   }
 }
 
+async function add_email(chat_id, email) {
+  chat_id = chat_id.toString();
+  const connection = await createConnection();
+  try {
+    await connection.execute("UPDATE users SET email = ? WHERE chat_id = ?", [
+      email,
+      chat_id,
+    ]);
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
+async function add_location(chat_id, latitude, longitude) {
+  const connection = await createConnection();
+  longitude = longitude.toString();
+  latitude = latitude.toString();
+
+  try {
+    await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
+      latitude + "," + longitude,
+      chat_id,
+    ]);
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
 module.exports = {
   add_user,
   send_photo,
@@ -465,4 +502,6 @@ module.exports = {
   get_userStyle,
   get_currentOrder,
   addToOrder,
+  add_email,
+  add_location,
 };

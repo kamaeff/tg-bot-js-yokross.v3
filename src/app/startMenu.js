@@ -1,5 +1,5 @@
 const fs = require("fs");
-const axios = require("axios");
+const axios = require("axios"); // Убедитесь, что библиотека Axios подключена
 const winston = require("winston");
 const DailyRotateFile = require("winston-daily-rotate-file");
 
@@ -27,6 +27,8 @@ const {
   get_currentOrder,
   new_order,
   addToOrder,
+  add_email,
+  add_location,
 } = require("./DB/db");
 
 const { sendPhotoWithNavigation } = require("./func/carusel");
@@ -40,12 +42,14 @@ const {
   showorders,
 } = require("./func/orders-controller");
 const { next_photo, prev_photo } = require("./func/show-controller");
+const { Console } = require("console");
 
 const userSessions = new Map();
 let userSession;
 let selectedPhoto = 0;
 const YokrossId = "@yokross12";
 let check;
+const geocodingEndpoint = "https://geocode-maps.yandex.ru/1.x/";
 
 const logger = winston.createLogger({
   level: "info",
@@ -68,6 +72,58 @@ const logger = winston.createLogger({
     }),
   ],
 });
+
+async function getAddressByCoordinates(latitude, longitude) {
+  try {
+    const response = await axios.get(geocodingEndpoint, {
+      params: {
+        apikey: process.env.APIKEY,
+        geocode: `${longitude},${latitude}`,
+        format: "json",
+      },
+    });
+
+    const feature = response.data.response.GeoObjectCollection.featureMember[0];
+    const addressDetails =
+      feature.GeoObject.metaDataProperty.GeocoderMetaData.AddressDetails;
+
+    // Получаем информацию о городе
+    const city =
+      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
+        ?.LocalityName || "";
+
+    // Получаем информацию о районе
+    const district =
+      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
+        ?.DependentLocality?.DependentLocalityName || "";
+
+    // Получаем информацию о улице
+    const street =
+      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
+        ?.Thoroughfare?.ThoroughfareName ||
+      addressDetails.Country.AdministrativeArea?.SubAdministrativeArea?.Locality
+        ?.DependentLocality?.Thoroughfare?.ThoroughfareName ||
+      "";
+
+    // Сформируем полный адрес
+    const fullAddress = `${city}, ${district}, ${street}`;
+
+    return fullAddress.trim();
+  } catch (error) {
+    console.error("Ошибка при получении адреса:", error.message);
+    throw error;
+  }
+}
+
+function extractComponent(addressDetails, componentName) {
+  const component =
+    addressDetails.Country.AdministrativeArea?.SubAdministrativeArea
+      ?.Locality?.[componentName] ||
+    addressDetails.Country.AdministrativeArea?.Locality?.[componentName] ||
+    "";
+
+  return component;
+}
 
 async function brandChoice(bot, chatId, data, user_callBack, messageId) {
   const messageHandler = async (msg) => {
@@ -174,8 +230,7 @@ module.exports = (bot) => {
           chatId,
           `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
             `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
-            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
-            `➖ <b>/locale</b> - <i>Отправить геолокацию</i>`,
+            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n`,
           { parse_mode: "HTML" }
         );
         break;
@@ -226,6 +281,7 @@ module.exports = (bot) => {
           bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
         }
         break;
+
       case "admin_tables":
         await admins(bot, chatId);
         break;
@@ -236,6 +292,62 @@ module.exports = (bot) => {
           "<i><b>Snippets</b></i>\n\n" +
             `➖ <b><i>Сниппет правил:</i></b>\n` +
             `<b><i><a href = "https://telegra.ph/Pravila-chata-11-06-17">📑 Правила чата</a></i></b>\n⁉️ Уважение трудно заработать, но легко потерять.`,
+          { parse_mode: "HTML" }
+        );
+        break;
+
+      case "locale":
+        const keyboard = {
+          reply_markup: {
+            keyboard: [
+              [
+                {
+                  text: "Отправить геолокацию",
+                  request_location: true,
+                },
+              ],
+            ],
+            resize_keyboard: true,
+          },
+        };
+
+        bot.sendMessage(
+          chatId,
+          "Нажмите кнопку, чтобы отправить геолокацию:",
+          keyboard
+        );
+        break;
+
+      case "email":
+        bot.deleteMessage(chatId, messageId);
+
+        const messageHandler = async (msg) => {
+          try {
+            userSessions.get(chatId, userSession);
+            userSession = {
+              email: msg.text,
+            };
+            await add_email(chatId, userSession.email);
+
+            bot.sendMessage(
+              chatId,
+              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлена новая почта <b><i>${msg.text}</i></b>`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify(chatOptions_profile),
+              }
+            );
+          } catch (e) {
+            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
+          }
+          bot.off("message", messageHandler);
+        };
+
+        bot.on("message", messageHandler);
+
+        bot.sendMessage(
+          chatId,
+          `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
           { parse_mode: "HTML" }
         );
         break;
@@ -350,6 +462,7 @@ module.exports = (bot) => {
               orders: profile.orders,
               locale: profile.locale,
               bonuses: profile.bonus,
+              email: profile.email,
             };
             userSessions.set(chatId, userSession);
 
@@ -359,13 +472,48 @@ module.exports = (bot) => {
                 `● <b>Всего заказов сделано:</b> <i>${userSession.orders}</i>\n` +
                 `● <b>Твоя геолокация:</b> <i>${
                   userSession.locale.length === 0
-                    ? "Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, отправь --> /locale"
+                    ? `Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, нажми на --> <b>🌐 Отправить геолокацию</b>`
                     : userSession.locale
                 }</i>\n` +
-                `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>`,
+                `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>\n` +
+                `● <b>Email:</b> <i>${
+                  userSession.email.length === 0
+                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить почту</b>, чтобы заполнить почту`
+                    : userSession.email
+                }</i>`,
 
               parse_mode: "HTML",
-              reply_markup: JSON.stringify(profile_keyboard),
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "⏳ История заказов",
+                      callback_data: "data_orders",
+                    },
+                    {
+                      text: "🚚 Текущий заказ",
+                      callback_data: "current_order",
+                    },
+                  ],
+                  [
+                    {
+                      text:
+                        userSession.locale.length === 0
+                          ? "🌐 Отправить геолакацию"
+                          : "",
+                      callback_data: "locale",
+                    },
+                    {
+                      text:
+                        userSession.email.length === 0
+                          ? "✉️ Заполнить почту"
+                          : "",
+                      callback_data: "email",
+                    },
+                  ],
+                  [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
+                ],
+              }),
             });
 
             logger.info(
@@ -502,6 +650,74 @@ module.exports = (bot) => {
         break;
 
       case "order":
+        const profileData = await getProfile(chatId);
+        if (profileData.length > 0) {
+          const profile = profileData[0];
+          userSession = {
+            locale: profile.locale,
+            email: profile.email,
+          };
+          userSessions.set(chatId, userSession);
+          console.log(userSession.locale, userSession.email);
+
+          if (userSession.locale && userSession.email) {
+            await tech(bot, chatId, msg.message.chat.first_name);
+            const [latitude, longitude] = userSession.locale
+              .split(",")
+              .map((coord) => parseFloat(coord.trim()));
+            const str = await getAddressByCoordinates(latitude, longitude);
+            console.log(latitude, longitude);
+            console.log(str);
+          } else {
+            console.log(userSession.locale, userSession.email);
+            bot.sendMessage(
+              chatId,
+              `<i>${
+                userSession.locale.length === 0
+                  ? `Пока что твоя геолокация неизвестна.\nЧтобы отправить свою геолокацию, нажми на --> <b>🌐 Отправить геолокацию</b>`
+                  : ""
+              }</i>\n` +
+                `<i>${
+                  userSession.email.length === 0
+                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить почту</b>, чтобы заполнить почту`
+                    : ""
+                }</i>`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text:
+                          userSession.locale.length === 0
+                            ? "🌐 Отправить геолакацию"
+                            : "",
+                        callback_data: "locale",
+                      },
+                      {
+                        text:
+                          userSession.email.length === 0
+                            ? "✉️ Заполнить почту"
+                            : "",
+                        callback_data: "email",
+                      },
+                    ],
+                    [
+                      {
+                        text: "🏠 Выход в главное меню",
+                        callback_data: "home",
+                      },
+                    ],
+                  ],
+                }),
+              }
+            );
+          }
+        }
+
+        break;
+
+      case "yes":
         bot.deleteMessage(chatId, messageId);
         userSessions.get(chatId, userSession);
         if (userSession && userSession.photos) {
@@ -561,11 +777,6 @@ module.exports = (bot) => {
 
         break;
 
-      case "yes":
-        //url: `https://yokrossbot.ru/payanyway.php?orderId=${userSession.order_id}`
-
-        break;
-
       case "payment":
         bot.deleteMessage(chatId, messageId);
 
@@ -575,6 +786,7 @@ module.exports = (bot) => {
           console.error("userSession or photos is undefined or null.");
         }
 
+        // todo payment check
         console.log(userSession.order_id);
 
         await tech(bot, chatId, msg.message.chat.first_name);
@@ -600,6 +812,39 @@ module.exports = (bot) => {
           `User ${msg.message.chat.first_name} paid and update bonuses.`
         );
         break;
+    }
+  });
+
+  bot.on("location", async (msg) => {
+    const chatId = msg.chat.id;
+    userSession = {
+      latitude: msg.location.latitude,
+      longitude: msg.location.longitude,
+    };
+
+    const ch = await add_location(
+      chatId,
+      userSession.latitude,
+      userSession.longitude
+    );
+    if (ch === true) {
+      bot.sendMessage(
+        chatId,
+        `<b><i>Yo ${msg.chat.first_name}</i></b>, ты отправили геолокацию: ${userSession.latitude}, ${userSession.longitude}`,
+        {
+          parse_mode: "HTML",
+          reply_markup: JSON.stringify(chatOptions_profile),
+        }
+      );
+    } else {
+      bot.sendMessage(
+        chatId,
+        `<b><i>Yo ${msg.chat.first_name}</i></b>, я не смог распознать геолокацию`,
+        {
+          parse_mode: "HTML",
+          reply_markup: JSON.stringify(chatOptions_profile),
+        }
+      );
     }
   });
 };

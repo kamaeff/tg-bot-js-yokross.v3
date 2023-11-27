@@ -34,7 +34,7 @@ const chatOptions_profile = {
     [
       {
         text: "🏠 Выход в главное меню",
-        callback_data: "home",
+        callback_data: "exit",
       },
     ],
   ],
@@ -49,8 +49,14 @@ const gender = {
 
 const profile_keyboard = {
   inline_keyboard: [
-    [{ text: "⏳ История заказов", callback_data: "data_orders" }],
-    [{ text: "🚚 Текущий заказ", callback_data: "current_order" }],
+    [
+      { text: "⏳ История заказов", callback_data: "data_orders" },
+      { text: "🚚 Текущий заказ", callback_data: "current_order" },
+    ],
+    [
+      { text: "🌐 Отправить геолакацию", callback_data: "locale" },
+      { text: "✉️ Заполнить почту", callback_data: "email" },
+    ],
     [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
   ],
 };
