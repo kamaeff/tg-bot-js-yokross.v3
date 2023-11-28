@@ -7,6 +7,7 @@ const {
   profile_keyboard,
   check_style,
   chatOptions_profile,
+  admin_btns,
 } = require("./func/btns");
 
 const {
