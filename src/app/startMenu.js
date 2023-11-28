@@ -621,12 +621,14 @@ module.exports = (bot) => {
         break;
 
       case "home":
+        await add_user(chatId, msg.chat.username);
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
         bot.off("message", messageHandler);
         bot.deleteMessage(chatId, messageId);
         break;
 
       case "exit":
+        await add_user(chatId, msg.chat.username);
         bot.off("message", messageHandler);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
