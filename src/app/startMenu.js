@@ -4,7 +4,6 @@ const DailyRotateFile = require("winston-daily-rotate-file");
 
 const {
   keyboard,
-  profile_keyboard,
   check_style,
   chatOptions_profile,
   admin_btns,
@@ -16,7 +15,6 @@ const {
   send_dynamic_add_photo,
   select_photo,
   getProfile,
-  delOrder,
   createPDF,
   add_gender,
   get_gender,
@@ -50,8 +48,6 @@ let userSession;
 let selectedPhoto = 0;
 const YokrossId = "@yokross12";
 let check;
-const geocodingEndpoint = "https://geocode-maps.yandex.ru/1.x/";
-let messageHandler;
 const userStorage = {};
 
 const logger = winston.createLogger({
@@ -261,7 +257,6 @@ module.exports = (bot) => {
 
       case "cancel":
         bot.deleteMessage(chatId, messageId);
-        bot.off("message", messageHandler);
         bot.sendMessage(
           chatId,
           `✌🏻 Yo <b>${msg.message.chat.first_name}</b>, успешно отменено`,

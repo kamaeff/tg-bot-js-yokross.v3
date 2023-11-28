@@ -1,4 +1,3 @@
-const config = require("../Config/config");
 const { admin_btns } = require("./btns");
 const { send_photo, add_user } = require("../DB/db");
 
