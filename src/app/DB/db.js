@@ -507,20 +507,6 @@ async function add_fio(chat_id, fio) {
   }
 }
 
-async function add_to_order(chat_id, address, email, fio) {
-  const connection = await createConnection();
-  try {
-    await connection.execute(
-      "INSERT INTO orders (chat_id, adress, email, FIO) VALUES (?,?,?,?)",
-      [chat_id, address, email, fio]
-    );
-    return true;
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
-}
-
 async function check_payment(chat_id) {
   const connection = await createConnection();
   try {
@@ -569,6 +555,5 @@ module.exports = {
   add_email,
   add_location,
   add_fio,
-  add_to_order,
   check_payment,
 };

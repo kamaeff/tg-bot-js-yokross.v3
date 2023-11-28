@@ -29,7 +29,6 @@ const {
   add_email,
   add_location,
   add_fio,
-  add_to_order,
   check_payment,
 } = require("./DB/db");
 
@@ -44,7 +43,6 @@ const {
   showorders,
 } = require("./func/orders-controller");
 const { next_photo, prev_photo } = require("./func/show-controller");
-const { Console } = require("console");
 
 const userSessions = new Map();
 let userSession;
