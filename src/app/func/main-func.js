@@ -1,6 +1,6 @@
 const config = require("../Config/config");
 const { admin_btns } = require("./btns");
-const { send_photo } = require("../DB/db");
+const { send_photo, add_user } = require("../DB/db");
 
 async function start(bot, chatId, username, userSessions) {
   userSessions.delete(chatId);
@@ -59,6 +59,7 @@ async function tech(bot, chatId, username) {
 async function check_folow(YokrossId, chatId, bot, username) {
   try {
     const chatMember = await bot.getChatMember(YokrossId, chatId);
+    await add_user(chatId, username);
 
     if (
       chatMember &&

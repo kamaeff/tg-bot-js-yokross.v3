@@ -32,6 +32,10 @@ async function testDatabaseConnection() {
 async function add_user(user_Id, user_Name) {
   user_Id = user_Id.toString();
   let res = "";
+  console.log(user_Name);
+  if (user_Name === undefined) {
+    user_Name = user_Id;
+  }
   try {
     const connection = await createConnection();
 
