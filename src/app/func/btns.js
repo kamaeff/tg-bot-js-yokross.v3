@@ -13,7 +13,7 @@ const admin_btns = {
     [
       {
         text: "Основной бот (Не трогай в беседе команды)",
-        callback_data: "exit",
+        callback_data: "home",
       },
     ],
   ],

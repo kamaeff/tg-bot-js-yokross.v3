@@ -190,7 +190,7 @@ async function addToOrder(data, size, chat_id) {
 
   try {
     const [rows] = await connection.execute(
-      "SELECT name_shooes, gender_option FROM Updates WHERE name_shooes = ? AND size = ?",
+      "SELECT name_shooes, gender_option, style FROM Updates WHERE name_shooes = ? AND size = ?",
       [data, size]
     );
     const [user_gender] = await connection.execute(
@@ -202,6 +202,7 @@ async function addToOrder(data, size, chat_id) {
       const log = rows.map((row) => ({
         name: row.name_shooes,
         gender: row.gender_option,
+        style: row.style,
       }));
       return log;
     } else {

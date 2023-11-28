@@ -5,11 +5,6 @@ const { send_photo } = require("../DB/db");
 async function start(bot, chatId, username, userSessions) {
   userSessions.delete(chatId);
   chatId = chatId.toString();
-  const chat =
-    chatId === process.env.GROUP_ADMIN ||
-    chatId === process.env.ADMIN_ID ||
-    chatId === process.env.LOGIST ||
-    chatId === process.env.SERVIRCE_ID;
   await bot.sendPhoto(chatId, "./src/app/img/mainlogo.png", {
     caption:
       `<b>✌🏻 Yo ${username}! Я бот группы <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i></b>\n\n` +
@@ -30,7 +25,6 @@ async function start(bot, chatId, username, userSessions) {
           { text: "⚡️ ShowRoom", callback_data: "show" },
         ],
         [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
-        [{ text: chat ? "📑 Админка" : "", callback_data: "admin" }],
       ],
     }),
   });

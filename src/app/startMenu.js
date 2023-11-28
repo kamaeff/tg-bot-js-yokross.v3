@@ -52,6 +52,7 @@ const YokrossId = "@yokross12";
 let check;
 const geocodingEndpoint = "https://geocode-maps.yandex.ru/1.x/";
 let messageHandler;
+const userStorage = {};
 
 const logger = winston.createLogger({
   level: "info",
@@ -75,148 +76,70 @@ const logger = winston.createLogger({
   ],
 });
 
-async function brandChoice(bot, chatId, data, user_callBack, messageId) {
-  const messageHandler = async (msg) => {
-    const log = await addToOrder(data, msg.text, chatId);
-    const user = await get_userStyle(chatId);
-
-    if (parseInt(msg.text) && log != false && log != undefined) {
-      userSession = {
-        size: msg.text,
-        shooes_name: log[0].name,
-        gender: user[0].gender,
-        style: user[0].style,
-      };
-      userSessions.set(chatId, userSession);
-
-      const res = await get_gender(
-        userSession.shooes_name,
-        userSession.size,
-        userSession.style,
-        userSession.gender
-      );
-
-      if (userSession) {
-        userSession = {
-          photos: res,
-          currentIndex: 0,
-        };
-        userSessions.set(chatId, userSession);
-      }
-
-      if (userSession.photos.length > 0) {
-        const currentIndex = userSession.currentIndex;
-        const firstPhoto = userSession.photos[currentIndex];
-        const totalPhotos = userSession.photos.length;
-        const showPrevButton = currentIndex > 0;
-
-        await sendPhotoWithNavigation(
-          bot,
-          chatId,
-          userSession,
-          currentIndex,
-          firstPhoto,
-          totalPhotos,
-          showPrevButton
-        );
-
-        logger.info(
-          `Size: ${msg.text} us for ${user_callBack} of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${user[0].style}\n. Success, Output: ${res.length}\n`
-        );
-      }
-    } else {
-      userSession = {
-        gender: user[0].gender,
-      };
-      if (userSession.gender === "man") {
-        userSession.gender = "мужской";
-      } else {
-        userSession.gender = "женский";
-      }
-      logger.info(`${user_callBack} cant find ${data} ${msg.text} us`);
-      await bot.sendMessage(
-        chatId,
-        `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${msg.text} us </i></b>бренд: <b><i>${data}</i></b>.\n\n` +
-          `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
-        {
-          reply_markup: JSON.stringify(keyboard),
-          parse_mode: "HTML",
-        }
-      );
-    }
-    bot.off("message", messageHandler);
-  };
-
-  bot.on("message", messageHandler);
-
-  bot.deleteMessage(chatId, messageId);
-  await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-    caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-    parse_mode: "HTML",
-  });
-}
+const objectToString = (obj) => {
+  if (typeof obj === "object") {
+    return JSON.stringify(obj, null, 2); // Convert object to a formatted JSON string
+  }
+  return obj.toString(); // Use default toString for non-objects
+};
 
 // ============ StartMenu ============
 module.exports = (bot) => {
-  bot.on("message", async (msg) => {
+  bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const username = msg.chat.username;
     const messageId = msg.message_id;
 
-    switch (msg.text) {
-      case "/start":
-        check = await check_folow(YokrossId, chatId, bot, msg.chat.username);
-        console.log(check);
-        if (check === true) {
-          bot.deleteMessage(chatId, messageId);
-          await start(bot, chatId, msg.chat.first_name, userSessions);
-          const res = await add_user(chatId, msg.chat.username);
-          logger.info(`User ${username} was auth. Database: ${res}`);
-        }
-
-        break;
-      case "/commands":
-        await bot.sendMessage(
-          chatId,
-          `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
-            `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
-            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
-            `➖ <b>/guide</b> - <i>Посмотреть гайд</i>\n`,
-          { parse_mode: "HTML" }
-        );
-        break;
-
-      case "/admin":
-        const chat_id = msg.chat.id.toString();
-        if (
-          process.env.ADMIN_ID === chat_id ||
-          process.env.GROUP_ADMIN === chat_id ||
-          process.env.LOGIST_ID === chat_id ||
-          process.env.SERVIRCE_ID === chat_id
-        ) {
-          await start_admin(bot, chatId);
-        } else {
-          bot.sendMessage(chatId, "У вас нет доступа к этой команде.");
-        }
-        break;
-
-      case "/donate":
-        bot.sendMessage(
-          chatId,
-          `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
-            `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>`,
-          { parse_mode: "HTML" }
-        );
-        break;
-
-      case "/guide":
-        bot.sendMessage(
-          chatId,
-          `<b>Ссылка на гайд:</b> \n<i><a href="https://t.me/yokrossguide12/5">Guide</a></i>`,
-          { parse_mode: "HTML" }
-        );
-        break;
+    check = await check_folow(YokrossId, chatId, bot, msg.chat.username);
+    console.log(check);
+    if (check === true) {
+      bot.deleteMessage(chatId, messageId);
+      await start(bot, chatId, msg.chat.first_name, userSessions);
+      const res = await add_user(chatId, msg.chat.username);
+      logger.info(`User ${username} was auth. Database: ${res}`);
     }
+  });
+
+  bot.onText(/\/guide/, async (msg) => {
+    bot.sendMessage(
+      msg.chat.id,
+      `<b>Ссылка на гайд:</b> \n<i><a href="https://t.me/yokrossguide12/5">Guide</a></i>`,
+      { parse_mode: "HTML" }
+    );
+  });
+
+  bot.onText(/\/commands/, async (msg) => {
+    await bot.sendMessage(
+      msg.chat.id,
+      `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
+        `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
+        `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
+        `➖ <b>/guide</b> - <i>Посмотреть гайд</i>\n`,
+      { parse_mode: "HTML" }
+    );
+  });
+
+  bot.onText(/\/admin/, async (msg) => {
+    const chat_id = msg.chat.id.toString();
+    if (
+      process.env.ADMIN_ID === chat_id ||
+      process.env.GROUP_ADMIN === chat_id ||
+      process.env.LOGIST_ID === chat_id ||
+      process.env.SERVIRCE_ID === chat_id
+    ) {
+      await start_admin(bot, msg.chat.id);
+    } else {
+      bot.sendMessage(msg.chat.id, "У вас нет доступа к этой команде.");
+    }
+  });
+
+  bot.onText(/\/donate/, async (msg) => {
+    bot.sendMessage(
+      msg.chat.id,
+      `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
+        `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>`,
+      { parse_mode: "HTML" }
+    );
   });
 
   //calbaks for menues
@@ -228,6 +151,7 @@ module.exports = (bot) => {
 
     switch (data) {
       case "admin":
+        bot.deleteMessage(chatId, messageId);
         const chat_id = msg.message.chat.id.toString();
         if (
           process.env.ADMIN_ID === chat_id ||
@@ -242,10 +166,12 @@ module.exports = (bot) => {
         break;
 
       case "admin_tables":
+        bot.deleteMessage(chatId, messageId);
         await admins(bot, chatId);
         break;
 
       case "snippets":
+        bot.deleteMessage(chatId, messageId);
         bot.sendMessage(
           chatId,
           "<i><b>Snippets</b></i>\n\n" +
@@ -258,36 +184,11 @@ module.exports = (bot) => {
       case "locale":
         bot.deleteMessage(chatId, messageId);
 
-        messageHandler = async (msg) => {
-          try {
-            userSessions.get(chatId, userSession);
-            userSession = {
-              address: msg.text,
-            };
-
-            await add_location(chatId, userSession.address);
-
-            bot.sendMessage(
-              chatId,
-              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлена новый адресс ПВЗ <b><i>${msg.text}</i></b>`,
-              {
-                parse_mode: "HTML",
-                reply_markup: JSON.stringify(chatOptions_profile),
-              }
-            );
-            bot.off("message", messageHandler);
-          } catch (e) {
-            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
-          }
-          bot.off("message", messageHandler);
-        };
-
-        bot.on("message", messageHandler);
-
         bot.sendMessage(
           chatId,
           `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе.\n\n` +
-            `<i>P.S Если не знаешь где находятся ПВЗ, то можешь посмотреть на карте</i>`,
+            `<i>P.S Если не знаешь где находятся <i><b>ПВЗ Boxberry</b></i>, то можешь посмотреть на карте</i>\n\n` +
+            `<i>Пример ввода: Москва, Красная Пресня 28</i>`,
           {
             reply_markup: JSON.stringify({
               inline_keyboard: [
@@ -298,7 +199,7 @@ module.exports = (bot) => {
                   },
                   {
                     text: "🧨 Отмена",
-                    callback_data: "home",
+                    callback_data: "cancel",
                   },
                 ],
               ],
@@ -306,75 +207,65 @@ module.exports = (bot) => {
             parse_mode: "HTML",
           }
         );
+
+        userStorage[chatId] = { state: "awaitingAddress" };
         break;
 
       case "email":
         bot.deleteMessage(chatId, messageId);
 
-        messageHandler = async (msg) => {
-          try {
-            userSessions.get(chatId, userSession);
-            userSession = {
-              email: msg.text,
-            };
-            await add_email(chatId, userSession.email);
-
-            bot.sendMessage(
-              chatId,
-              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлена новая почта <b><i>${msg.text}</i></b>`,
-              {
-                parse_mode: "HTML",
-                reply_markup: JSON.stringify(chatOptions_profile),
-              }
-            );
-            bot.off("message", messageHandler);
-          } catch (e) {
-            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
-          }
-          bot.off("message", messageHandler);
-        };
-
-        bot.on("message", messageHandler);
-
         bot.sendMessage(
           chatId,
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
-          { parse_mode: "HTML", reply_markup: JSON.stringify(keyboard) }
+          {
+            parse_mode: "HTML",
+            reply_markup: JSON.stringify({
+              inline_keyboard: [
+                [
+                  {
+                    text: "🧨 Отмена",
+                    callback_data: "cancel",
+                  },
+                ],
+              ],
+            }),
+          }
         );
+
+        userStorage[chatId] = { state: "awaitingEmail" };
         break;
 
       case "fio":
         bot.deleteMessage(chatId, messageId);
 
-        messageHandler = async (msg) => {
-          try {
-            userSessions.get(chatId, userSession);
-            userSession = {
-              fio: msg.text,
-            };
-            await add_fio(chatId, userSession.fio);
-
-            bot.sendMessage(
-              chatId,
-              `✌🏼 Yo <b>${msg.chat.first_name}</b>, успешно добавлено ФИО получателя: <b><i>${msg.text}</i></b>`,
-              {
-                parse_mode: "HTML",
-                reply_markup: JSON.stringify(chatOptions_profile),
-              }
-            );
-            bot.off("message", messageHandler);
-          } catch (e) {
-            bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
-          }
-          bot.off("message", messageHandler);
-        };
-
-        bot.on("message", messageHandler);
-
         bot.sendMessage(
           chatId,
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свой ФИО (это надо для заполнения получателя при доставке)`,
-          { parse_mode: "HTML", reply_markup: JSON.stringify(keyboard) }
+          {
+            parse_mode: "HTML",
+            reply_markup: JSON.stringify({
+              inline_keyboard: [
+                [
+                  {
+                    text: "🧨 Отмена",
+                    callback_data: "cancel",
+                  },
+                ],
+              ],
+            }),
+          }
+        );
+
+        userStorage[chatId] = { state: "awaitingFIO" };
+        break;
+
+      case "cancel":
+        bot.deleteMessage(chatId, messageId);
+        bot.off("message", messageHandler);
+        bot.sendMessage(
+          chatId,
+          `✌🏻 Yo <b>${msg.message.chat.first_name}</b>, успешно отменено`,
+          { parse_mode: "HTML" }
         );
         break;
 
@@ -450,36 +341,78 @@ module.exports = (bot) => {
 
       case "Nike":
         logger.info(`${msg.message.chat.first_name} choose Nike`);
-        await brandChoice(bot, chatId, data, user_callBack, messageId);
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Adidas":
         logger.info(`${msg.message.chat.first_name} choose Adidas`);
-        await brandChoice(bot, chatId, data, user_callBack, messageId);
+
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Reebok":
         logger.info(`${msg.message.chat.first_name} choose Reebok`);
-        await brandChoice(bot, chatId, data, user_callBack, messageId);
+
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Puma":
         logger.info(`${msg.message.chat.first_name} choose Puma`);
-        await brandChoice(bot, chatId, data, user_callBack, messageId);
+
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Jordan":
         logger.info(`${msg.message.chat.first_name} choose Jordan`);
-        await brandChoice(bot, chatId, data, user_callBack, messageId);
+
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "NewBalance":
         logger.info(`${msg.message.chat.first_name} choose NewBalance`);
-        brandChoice(bot, chatId, data, user_callBack, messageId);
+
+        bot.deleteMessage(chatId, messageId);
+        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
+          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+          parse_mode: "HTML",
+        });
+
+        userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "profile":
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
+
         if (check === true) {
           const profileData = await getProfile(chatId);
           if (profileData.length > 0) {
@@ -492,6 +425,13 @@ module.exports = (bot) => {
               fio: profile.fio,
             };
             userSessions.set(chatId, userSession);
+            logger.info(objectToString(profileData));
+            const chat_id = msg.message.chat.id.toString();
+            const chat =
+              chat_id === process.env.GROUP_ADMIN ||
+              chat_id === process.env.ADMIN_ID ||
+              chat_id === process.env.LOGIST ||
+              chat_id === process.env.SERVIRCE_ID;
 
             await bot.sendMessage(
               chatId,
@@ -554,6 +494,12 @@ module.exports = (bot) => {
                     ],
                     [
                       {
+                        text: chat ? "📑 Админка" : "",
+                        callback_data: "admin",
+                      },
+                    ],
+                    [
+                      {
                         text: "🏠 Выход в главное меню",
                         callback_data: "home",
                       },
@@ -562,15 +508,6 @@ module.exports = (bot) => {
                 }),
               }
             );
-
-            logger.info(
-              `${msg.message.chat.first_name} profile.\n` +
-                `All orders: ${userSession.orders}\n` +
-                `Bonuses: ${userSession.bonuses}\n` +
-                `Geo: ${userSession.locale}\n` +
-                `Email: ${userSession.email}\n` +
-                `Fio: ${userSession.fio}`
-            );
           }
         }
         break;
@@ -578,6 +515,7 @@ module.exports = (bot) => {
       case "current_order":
         bot.deleteMessage(chatId, messageId);
         const current = await get_currentOrder(chatId);
+        logger.info(objectToString(current));
         if (current === false) {
           bot.sendMessage(
             chatId,
@@ -603,6 +541,7 @@ module.exports = (bot) => {
       case "data_orders":
         bot.deleteMessage(chatId, messageId);
         const orders = await past_orders(chatId);
+        logger.info(objectToString(orders));
 
         await showorders(bot, orders, chatId, userSession, userSessions, msg);
         break;
@@ -624,13 +563,13 @@ module.exports = (bot) => {
       case "home":
         await add_user(chatId, msg.message.chat.username);
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
-        bot.off("message", messageHandler);
+
         bot.deleteMessage(chatId, messageId);
         break;
 
       case "exit":
         await add_user(chatId, msg.message.chat.username);
-        bot.off("message", messageHandler);
+
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
@@ -723,6 +662,7 @@ module.exports = (bot) => {
             email: profile.email,
             fio: profile.fio,
           };
+          logger.info(objectToString(profile));
 
           userSessions.set(chatId, userSession);
           logger.info(userSession.locale, userSession.email, userSession.fio);
@@ -738,6 +678,8 @@ module.exports = (bot) => {
               userSession.email,
               userSession.fio
             );
+
+            logger.info(`Add to DB: ${objectToString(addting)}`);
             bot.sendPhoto(chatId, selectedPhoto.path, {
               caption:
                 `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
@@ -834,6 +776,7 @@ module.exports = (bot) => {
 
         // todo payment check
         const res = check_payment(chatId);
+        logger.info(objectToString(res), "\n");
 
         if (res != false) {
           bot.sendMessage(
@@ -885,6 +828,166 @@ module.exports = (bot) => {
           );
         }
         break;
+    }
+  });
+
+  bot.on("text", async (msg) => {
+    const chatId = msg.chat.id;
+    const userText = msg.text;
+    const data = msg.data;
+
+    if (userStorage[chatId]) {
+      const currentState = userStorage[chatId].state;
+      switch (currentState) {
+        case "awaitingAddress":
+          userStorage[chatId].address = userText;
+
+          if (userStorage[chatId].address.length > 0) {
+            await add_location(chatId, userStorage[chatId].address);
+          }
+          delete userStorage[chatId];
+
+          bot.sendMessage(
+            chatId,
+            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
+            {
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify(chatOptions_profile),
+            }
+          );
+          break;
+
+        case "awaitingEmail":
+          userStorage[chatId].email = userText;
+
+          if (userStorage[chatId].email.length > 0) {
+            await add_email(chatId, userStorage[chatId].email);
+          }
+          delete userStorage[chatId];
+
+          bot.sendMessage(
+            chatId,
+            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
+            {
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify(chatOptions_profile),
+            }
+          );
+          break;
+
+        case "awaitingFIO":
+          userStorage[chatId].fio = userText;
+
+          if (userStorage[chatId].fio.length > 0) {
+            await add_fio(chatId, userStorage[chatId].fio);
+          }
+          delete userStorage[chatId];
+
+          bot.sendMessage(
+            chatId,
+            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
+            {
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify(chatOptions_profile),
+            }
+          );
+          break;
+
+        case "brandChoice":
+          userStorage[chatId].size = userText;
+
+          const log = await addToOrder(
+            userStorage[chatId].data,
+            userStorage[chatId].size,
+            chatId
+          );
+          const user = await get_userStyle(chatId);
+
+          const logMessage = `${userStorage[chatId].data}, size: ${
+            userStorage[chatId].size
+          }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
+
+          logger.info(logMessage);
+
+          if (
+            parseFloat(userStorage[chatId].size) &&
+            log != false &&
+            log != undefined &&
+            log.some((log) => log.style === user[0].style)
+          ) {
+            userSession = {
+              size: userStorage[chatId].size,
+              shooes_name: log[0].name,
+              gender: user[0].gender,
+              style: user[0].style,
+            };
+            userSessions.set(chatId, userSession);
+
+            const res = await get_gender(
+              userSession.shooes_name,
+              userSession.size,
+              userSession.style,
+              userSession.gender
+            );
+
+            if (userSession) {
+              userSession = {
+                photos: res,
+                currentIndex: 0,
+              };
+              userSessions.set(chatId, userSession);
+            }
+
+            if (userSession.photos.length > 0) {
+              const currentIndex = userSession.currentIndex;
+              const firstPhoto = userSession.photos[currentIndex];
+              const totalPhotos = userSession.photos.length;
+              const showPrevButton = currentIndex > 0;
+
+              await sendPhotoWithNavigation(
+                bot,
+                chatId,
+                userSession,
+                currentIndex,
+                firstPhoto,
+                totalPhotos,
+                showPrevButton
+              );
+
+              logger.info(
+                `Size: ${userStorage[chatId].size} us for ${
+                  msg.chat.first_name
+                } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
+                  user[0].style
+                }\n. Success, Output: ${res.length}\n\n${objectToString(
+                  res
+                )}\n\n`
+              );
+            }
+          } else {
+            userSession = {
+              gender: user[0].gender,
+            };
+            if (userSession.gender === "man") {
+              userSession.gender = "мужской";
+            } else {
+              userSession.gender = "женский";
+            }
+            logger.info(
+              `${msg.chat.first_name} cant find ${userStorage[chatId].data} ${userStorage[chatId].size} us`
+            );
+            await bot.sendMessage(
+              chatId,
+              `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${userStorage[chatId].size} us </i></b>бренд: <b><i>${userStorage[chatId].data}</i></b>.\n\n` +
+                `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
+              {
+                reply_markup: JSON.stringify(keyboard),
+                parse_mode: "HTML",
+              }
+            );
+          }
+          break;
+      }
     }
   });
 };
