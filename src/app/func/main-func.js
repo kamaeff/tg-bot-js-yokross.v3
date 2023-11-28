@@ -17,7 +17,6 @@ async function start(bot, chatId, username, userSessions) {
       `➖ <b>Поиск пары</b> - <i>Фильтр поиска пары</i>\n` +
       `➖ <b>ShowRoom</b> - <i>Коллекция магазина</i>\n` +
       `➖ <b>Мой профиль</b> - <i>Инфа о твоем профиле</i>\n` +
-      `➖ <b>Гайд</b> - <i>Как правильно заказать кроссовки</i>\n` +
       `➖ <b>Обратная связь</b> - <i>help@yokrossbot.ru</i>\n\n` +
       `<b><i>💬 Полезное:</i></b> \n` +
       `<i><b><a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27">➖ Договор оферты</a></b></i>\n` +
@@ -31,7 +30,6 @@ async function start(bot, chatId, username, userSessions) {
           { text: "⚡️ ShowRoom", callback_data: "show" },
         ],
         [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
-        [{ text: "🤓 Гайд", url: "https://t.me/yokrossguide12/5" }],
         [{ text: chat ? "📑 Админка" : "", callback_data: "admin" }],
       ],
     }),

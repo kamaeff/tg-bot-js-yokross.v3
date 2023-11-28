@@ -12,12 +12,6 @@ const admin_btns = {
     [{ text: "Снипеты для модерации", callback_data: "snippets" }],
     [
       {
-        text: "Лендинг оплаты сайта",
-        web_app: { url: "https://yokrossbot.ru" },
-      },
-    ],
-    [
-      {
         text: "Основной бот (Не трогай в беседе команды)",
         callback_data: "exit",
       },

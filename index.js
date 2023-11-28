@@ -16,6 +16,7 @@ const main = async () => {
     { command: "/start", description: "Перезапуск бота" },
     { command: "/commands", description: "Дополнительные команды бота" },
     { command: "/donate", description: "Поддержать разработчиков" },
+    { command: "/guide", description: "Как правильно заказать кроссовки" },
   ]);
 
   startMenu(bot);

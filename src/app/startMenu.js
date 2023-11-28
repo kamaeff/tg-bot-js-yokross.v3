@@ -181,7 +181,8 @@ module.exports = (bot) => {
           chatId,
           `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
             `➖ <b>/start</b> - <i>Перезапуск бота</i>\n` +
-            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n`,
+            `➖ <b>/donate</b> - <i>Поддержать разработчиков</i>\n` +
+            `➖ <b>/guide</b> - <i>Посмотреть гайд</i>\n`,
           { parse_mode: "HTML" }
         );
         break;
@@ -205,6 +206,14 @@ module.exports = (bot) => {
           chatId,
           `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
             `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>`,
+          { parse_mode: "HTML" }
+        );
+        break;
+
+      case "/guide":
+        bot.sendMessage(
+          chatId,
+          `<b>Ссылка на гайд:</b> \n<i><a href="https://t.me/yokrossguide12/5">Guide</a></i>`,
           { parse_mode: "HTML" }
         );
         break;
@@ -267,6 +276,7 @@ module.exports = (bot) => {
                 reply_markup: JSON.stringify(chatOptions_profile),
               }
             );
+            bot.off("message", messageHandler);
           } catch (e) {
             bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
           }
@@ -277,7 +287,25 @@ module.exports = (bot) => {
 
         bot.sendMessage(
           chatId,
-          `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе:`
+          `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе.\n\n` +
+            `<i>P.S Если не знаешь где находятся ПВЗ, то можешь посмотреть на карте</i>`,
+          {
+            reply_markup: JSON.stringify({
+              inline_keyboard: [
+                [
+                  {
+                    text: "🌐 Открыть карту",
+                    web_app: { url: "https://yandex.ru/maps/" },
+                  },
+                  {
+                    text: "🧨 Отмена",
+                    callback_data: "home",
+                  },
+                ],
+              ],
+            }),
+            parse_mode: "HTML",
+          }
         );
         break;
 
@@ -300,6 +328,7 @@ module.exports = (bot) => {
                 reply_markup: JSON.stringify(chatOptions_profile),
               }
             );
+            bot.off("message", messageHandler);
           } catch (e) {
             bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
           }
@@ -311,7 +340,7 @@ module.exports = (bot) => {
         bot.sendMessage(
           chatId,
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
-          { parse_mode: "HTML" }
+          { parse_mode: "HTML", reply_markup: JSON.stringify(keyboard) }
         );
         break;
 
@@ -334,6 +363,7 @@ module.exports = (bot) => {
                 reply_markup: JSON.stringify(chatOptions_profile),
               }
             );
+            bot.off("message", messageHandler);
           } catch (e) {
             bot.sendMessage(chatId, `Ничего не заполнено ${e}`);
           }
@@ -345,7 +375,7 @@ module.exports = (bot) => {
         bot.sendMessage(
           chatId,
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свой ФИО (это надо для заполнения получателя при доставке)`,
-          { parse_mode: "HTML" }
+          { parse_mode: "HTML", reply_markup: JSON.stringify(keyboard) }
         );
         break;
 
@@ -450,8 +480,6 @@ module.exports = (bot) => {
         break;
 
       case "profile":
-        bot.deleteMessage(chatId, messageId);
-
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           const profileData = await getProfile(chatId);
@@ -466,9 +494,9 @@ module.exports = (bot) => {
             };
             userSessions.set(chatId, userSession);
 
-            await bot.sendPhoto(chatId, "./src/app/img/profile.jpg", {
-              caption:
-                `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
+            await bot.sendMessage(
+              chatId,
+              `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
                 `● <b>ФИО:</b> <i>${
                   userSession.fio.length === 0
                     ? `\nЯ только знаю как тебя зовут.\nДобавь свое ФИО <b>👤 Заполнить ФИО"</b>`
@@ -478,57 +506,63 @@ module.exports = (bot) => {
                 `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>\n` +
                 `● <b>Адрес ПВЗ Boxberry:</b> <i>${
                   userSession.locale.length === 0
-                    ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>🌐 Заполнить адресс ПВЗ</b>`
+                    ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>📦 Обновить адресс ПВЗ</b>`
                     : userSession.locale
                 }</i>\n` +
                 `● <b>Email:</b> <i>${
                   userSession.email.length === 0
-                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить почту</b>, чтобы заполнить почту`
+                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить email</b>, чтобы заполнить почту`
                     : userSession.email
-                }</i>\n`,
-
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify({
-                inline_keyboard: [
-                  [
-                    {
-                      text: "⏳ История заказов",
-                      callback_data: "data_orders",
-                    },
-                    {
-                      text: "🚚 Текущий заказ",
-                      callback_data: "current_order",
-                    },
+                }</i>\n\n` +
+                `<i><b>P.S</b> Email, Адрес ПВЗ и ФИО нужны для формирования заказа</i>`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "⏳ История заказов",
+                        callback_data: "data_orders",
+                      },
+                      {
+                        text: "🚚 Текущий заказ",
+                        callback_data: "current_order",
+                      },
+                    ],
+                    [
+                      {
+                        text: "📦 Обновить адресс ПВЗ",
+                        callback_data: "locale",
+                      },
+                    ],
+                    [
+                      {
+                        text:
+                          userSession.email.length === 0
+                            ? "✉️ Заполнить email"
+                            : "",
+                        callback_data: "email",
+                      },
+                    ],
+                    [
+                      {
+                        text:
+                          userSession.fio.length === 0
+                            ? "👤 Заполнить ФИО"
+                            : "",
+                        callback_data: "fio",
+                      },
+                    ],
+                    [
+                      {
+                        text: "🏠 Выход в главное меню",
+                        callback_data: "home",
+                      },
+                    ],
                   ],
-                  [
-                    {
-                      text:
-                        userSession.locale.length === 0
-                          ? "🌐 Заполнить адресс ПВЗ"
-                          : "",
-                      callback_data: "locale",
-                    },
-                  ],
-                  [
-                    {
-                      text:
-                        userSession.email.length === 0
-                          ? "✉️ Заполнить почту"
-                          : "",
-                      callback_data: "email",
-                    },
-                  ],
-                  [
-                    {
-                      text:
-                        userSession.fio.length === 0 ? "👤 Заполнить ФИО" : "",
-                      callback_data: "fio",
-                    },
-                  ],
-                  [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
-                ],
-              }),
-            });
+                }),
+              }
+            );
 
             logger.info(
               `${msg.message.chat.first_name} profile.\n` +
@@ -590,10 +624,12 @@ module.exports = (bot) => {
 
       case "home":
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
+        bot.off("message", messageHandler);
         bot.deleteMessage(chatId, messageId);
         break;
 
       case "exit":
+        bot.off("message", messageHandler);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
