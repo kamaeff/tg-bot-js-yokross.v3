@@ -265,6 +265,7 @@ module.exports = (bot) => {
         break;
 
       case "choose":
+        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           bot.sendMessage(
@@ -277,7 +278,7 @@ module.exports = (bot) => {
                   [{ text: "👟 Лайфстайл", callback_data: "lifestyle" }],
                   [{ text: "🏀 Баскетбольные", callback_data: "basket" }],
                   [{ text: "⚽️ Футбольные", callback_data: "football" }],
-                  [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
+                  [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
                 ],
               }),
             }
@@ -406,6 +407,7 @@ module.exports = (bot) => {
         break;
 
       case "profile":
+        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
 
         if (check === true) {
@@ -496,7 +498,7 @@ module.exports = (bot) => {
                     [
                       {
                         text: "🏠 Выход в главное меню",
-                        callback_data: "home",
+                        callback_data: "exit",
                       },
                     ],
                   ],
@@ -575,6 +577,7 @@ module.exports = (bot) => {
         break;
 
       case "show":
+        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
@@ -829,12 +832,13 @@ module.exports = (bot) => {
   bot.on("text", async (msg) => {
     const chatId = msg.chat.id;
     const userText = msg.text;
-    const data = msg.data;
+    const messageId = msg.message_id;
 
     if (userStorage[chatId]) {
       const currentState = userStorage[chatId].state;
       switch (currentState) {
         case "awaitingAddress":
+          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].address = userText;
 
           if (userStorage[chatId].address.length > 0) {
@@ -853,6 +857,7 @@ module.exports = (bot) => {
           break;
 
         case "awaitingEmail":
+          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].email = userText;
 
           if (userStorage[chatId].email.length > 0) {
@@ -871,6 +876,7 @@ module.exports = (bot) => {
           break;
 
         case "awaitingFIO":
+          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].fio = userText;
 
           if (userStorage[chatId].fio.length > 0) {
@@ -889,6 +895,7 @@ module.exports = (bot) => {
           break;
 
         case "brandChoice":
+          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].size = userText;
 
           const log = await addToOrder(
