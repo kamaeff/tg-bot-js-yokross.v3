@@ -901,18 +901,18 @@ module.exports = (bot) => {
           );
           const user = await get_userStyle(chatId);
 
-          const logMessage = `${userStorage[chatId].data}, size: ${
-            userStorage[chatId].size
-          }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
-
-          logger.info(logMessage);
-
           if (
             parseFloat(userStorage[chatId].size) &&
             log != false &&
             log != undefined &&
             log.some((log) => log.style === user[0].style)
           ) {
+            const logMessage = `${userStorage[chatId].data}, size: ${
+              userStorage[chatId].size
+            }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
+
+            logger.info(logMessage);
+
             userSession = {
               size: userStorage[chatId].size,
               shooes_name: log[0].name,
