@@ -838,7 +838,6 @@ module.exports = (bot) => {
       const currentState = userStorage[chatId].state;
       switch (currentState) {
         case "awaitingAddress":
-          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].address = userText;
 
           if (userStorage[chatId].address.length > 0) {
@@ -857,7 +856,6 @@ module.exports = (bot) => {
           break;
 
         case "awaitingEmail":
-          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].email = userText;
 
           if (userStorage[chatId].email.length > 0) {
@@ -876,7 +874,6 @@ module.exports = (bot) => {
           break;
 
         case "awaitingFIO":
-          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].fio = userText;
 
           if (userStorage[chatId].fio.length > 0) {
@@ -895,7 +892,6 @@ module.exports = (bot) => {
           break;
 
         case "brandChoice":
-          bot.deleteMessage(chatId, messageId);
           userStorage[chatId].size = userText;
 
           const log = await addToOrder(
