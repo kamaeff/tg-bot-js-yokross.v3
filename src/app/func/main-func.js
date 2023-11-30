@@ -24,7 +24,7 @@ async function start(bot, chatId, username, userSessions) {
           { text: "⚡️ ShowRoom", callback_data: "show" },
         ],
         [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
-        // [{ text: "🍩 Помощь проекту", callback_data: "donate" }],
+        [{ text: "🍩 Помощь проекту", callback_data: "donate" }],
       ],
     }),
   });

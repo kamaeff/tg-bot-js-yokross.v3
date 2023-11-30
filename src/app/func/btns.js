@@ -109,7 +109,6 @@ module.exports = {
   keyboard,
   chatOptions_profile,
   gender,
-  //  paymentAgreemet,
   profile_keyboard,
   admin_btns,
   check_style,
