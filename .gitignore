@@ -6,3 +6,4 @@
 /node_modules/
 /src/app/func/admin.js
 *.env
+todo.txt
