@@ -4,9 +4,9 @@ const { send_photo, add_user } = require("../DB/db");
 async function start(bot, chatId, username, userSessions) {
   userSessions.delete(chatId);
   chatId = chatId.toString();
-  await bot.sendPhoto(chatId, "./src/app/img/mainlogo.png", {
+  await bot.sendPhoto(chatId, "./src/app/img/Logo.png", {
     caption:
-      `<b>✌🏻 Yo ${username}! Я бот группы <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i></b>\n\n` +
+      `<b>✌🏻 Yo ${username}! Я бот группы <i><b><a href="https://t.me/stockhub12">StockHub!</a></b></i></b>\n\n` +
       `⚙️ <b>Кнопки основного меню:</b>\n\n` +
       `➖ <b>Поиск пары</b> - <i>Фильтр поиска пары</i>\n` +
       `➖ <b>ShowRoom</b> - <i>Коллекция магазина</i>\n` +
@@ -24,6 +24,7 @@ async function start(bot, chatId, username, userSessions) {
           { text: "⚡️ ShowRoom", callback_data: "show" },
         ],
         [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
+        // [{ text: "🍩 Помощь проекту", callback_data: "donate" }],
       ],
     }),
   });
@@ -56,8 +57,10 @@ async function tech(bot, chatId, username) {
 }
 
 async function check_folow(YokrossId, chatId, bot, username) {
+  console.log(YokrossId, chatId, username);
   try {
     const chatMember = await bot.getChatMember(YokrossId, chatId);
+    console.log(chatMember);
     await add_user(chatId, username);
 
     if (
@@ -70,13 +73,13 @@ async function check_folow(YokrossId, chatId, bot, username) {
     } else {
       await bot.sendPhoto(chatId, "./src/app/img/profile_second.jpg", {
         caption:
-          `✌🏼 Yo <i><b>${username}</b></i>, я помогу подобрать тебе кроссовки, чтобы воспользоваться моими функциями, подпишись на нашу группу <b><i><a href='https://t.me/yokross12'> YoKross</a></i></b> !` +
+          `✌🏼 Yo <i><b>${username}</b></i>, я помогу подобрать тебе кроссовки, чтобы воспользоваться моими функциями, подпишись на нашу группу <b><i><a href='https://t.me/stockhub12'>StockHub</a></i></b> !` +
           `\n\nТак же обязательно прочитай <b><i><a href='https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27'>Договор оферты</a></i></b> !\n\n` +
           `После выполнения всех требований --> <i><b>Я прочитал и подписался</b></i>\n\n`,
         parse_mode: "HTML",
         reply_markup: JSON.stringify({
           inline_keyboard: [
-            [{ text: "✌🏼 YoKross", url: "https://t.me/yokross12" }],
+            [{ text: "🌐 StockHub", url: "https://t.me/stockhub12" }],
             [
               {
                 text: "📑 Договор оферты",

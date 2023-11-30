@@ -46,7 +46,7 @@ const { next_photo, prev_photo } = require("./func/show-controller");
 const userSessions = new Map();
 let userSession;
 let selectedPhoto = 0;
-const YokrossId = "@yokross12";
+const YokrossId = "@stockhub12";
 let check;
 const userStorage = {};
 
@@ -176,6 +176,16 @@ module.exports = (bot) => {
           { parse_mode: "HTML", reply_markup: JSON.stringify(admin_btns) }
         );
         break;
+
+      // case "donate":
+      //   bot.sendMessage(
+      //     msg.chat.id,
+      //     `✌🏻 Yo <b>${msg.message.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
+      //       `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>\n` +
+      //       `<b>Сбер: </b><code></code>`,
+      //     { parse_mode: "HTML" }
+      //   );
+      //   break;
 
       case "locale":
         bot.deleteMessage(chatId, messageId);
@@ -703,7 +713,7 @@ module.exports = (bot) => {
                   [
                     {
                       text: `💸 Оплатить заказ #${userSession.order_id}`,
-                      url: `https://yokrossbot.ru/payanyway.php?orderId=${userSession.order_id}`,
+                      url: `https://stockhub.ru/payanyway.php?orderId=${userSession.order_id}`,
                     },
                   ],
                   [
@@ -977,7 +987,7 @@ module.exports = (bot) => {
             await bot.sendMessage(
               chatId,
               `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${userStorage[chatId].size} us </i></b>бренд: <b><i>${userStorage[chatId].data}</i></b>.\n\n` +
-                `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/yokross12">YoKross!</a></b></i>`,
+                `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/stockhub12">🌐 StockHub!</a></b></i>`,
               {
                 reply_markup: JSON.stringify(keyboard),
                 parse_mode: "HTML",
