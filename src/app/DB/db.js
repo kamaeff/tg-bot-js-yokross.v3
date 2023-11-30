@@ -247,6 +247,10 @@ async function new_order(
         email,
       ]
     );
+    await connection.execute(
+      'UPDATE Updates SET flag_order = "1" WHERE name=?',
+      [name_shooes]
+    );
     return true;
   } catch (error) {
     console.error("Произошла ошибка:", error);
@@ -255,20 +259,40 @@ async function new_order(
   }
 }
 
-async function delOrder(chat_id, name) {
-  console.log(chat_id);
+async function delOrder(order_id) {
   const connection = await createConnection();
   try {
-    await connection.execute(
-      "UPDATE Updates SET flag_order = ? WHERE name = ?",
-      [0, name]
+    const [pull] = await connection.execute(
+      "SELECT * FROM orders WHERE order_id =? AND order_status =?",
+      [order_id, "Не оплачено"]
     );
-    console.log(`Отмена заказа`);
-    await connection.execute("DELETE FROM orders WHERE order_id = ?", [
-      chat_id,
-    ]);
+
+    console.log(pull);
+
+    const _pull = pull.map((row) => ({
+      chat_id: row.chat_id,
+      order_id: row.order_id,
+      name_kross: row.name_kross,
+    }));
+
+    if (_pull.length > 0) {
+      console.log(`Отмена заказа`);
+      await connection.execute("DELETE FROM orders WHERE order_id =?", [
+        order_id,
+      ]);
+
+      await connection.execute(
+        "UPDATE Updates SET flag_order = '0' WHERE name=?",
+        [_pull[0].name_kross]
+      );
+
+      return true;
+    } else {
+      return false;
+    }
   } catch (error) {
     console.error("Произошла ошибка:", error);
+    return false;
   } finally {
     connection.end();
   }
@@ -379,63 +403,76 @@ async function createPDF() {
 async function past_orders(chat_id) {
   chat_id = chat_id.toString();
   const connection = await createConnection();
-  const [res] = await connection.execute(
-    "SELECT name_kross FROM orders WHERE chat_id = ? AND ordered = ?",
-    [chat_id, "Доставлено"]
-  );
-
-  const resultArray = [];
-
-  for (const order of res) {
-    const [shooes] = await connection.execute(
-      "SELECT photo_path, material, price, name, size, color FROM Updates WHERE name = ?",
-      [order.name_kross]
+  try {
+    const [res] = await connection.execute(
+      "SELECT name_kross FROM orders WHERE chat_id = ? AND order_status = ?",
+      [chat_id, "Оплачено"]
     );
+    let output = [];
 
-    if (shooes.length > 0) {
-      const result = shooes.map((row) => ({
-        path: row.photo_path,
-        material: row.material,
-        price: row.price,
-        name: row.name,
-        size: row.size,
-        color: row.color,
-      }));
-      resultArray.push(...result);
+    console.log(res);
+
+    if (res.length > 0) {
+      for (let i = 0; i < res.length; i++) {
+        const [updateRes] = await connection.execute(
+          "SELECT * FROM Updates WHERE name =?",
+          [res[i].name_kross]
+        );
+
+        console.log(`UpdateRes for ${res[i].name_kross}:`, updateRes);
+
+        if (updateRes.length > 0) {
+          output = output.concat(
+            updateRes.map((row) => ({
+              path: row.photo_path,
+              material: row.material,
+              price: row.price,
+              name: row.name,
+              size: row.size,
+              color: row.color,
+            }))
+          );
+        }
+      }
+      return output;
+    } else {
+      return false;
     }
-  }
-
-  if (resultArray.length > 0) {
-    return resultArray;
-  } else {
+  } catch (error) {
+    console.error("Ошибка: ", error);
     return false;
   }
 }
 
 async function update_bonus(selectedPhoto, chat_id) {
-  const connection = await createConnection();
-  const [rows] = await connection.execute(
-    "SELECT price FROM Updates WHERE name = ?",
-    [selectedPhoto.name]
-  );
-  const [user] = await connection.execute(
-    "SELECT orders_count, bonus_count FROM users WHERE chat_id = ?",
-    [chat_id]
-  );
-  await connection.execute(
-    "UPDATE orders SET order_status = ? WHERE name_kross = ?",
-    ["Оплачено", selectedPhoto.name]
-  );
+  try {
+    const connection = await createConnection();
+    const [rows] = await connection.execute(
+      "SELECT price FROM Updates WHERE name = ?",
+      [selectedPhoto.name]
+    );
+    const [user] = await connection.execute(
+      "SELECT orders_count, bonus_count FROM users WHERE chat_id = ?",
+      [chat_id]
+    );
+    await connection.execute(
+      "UPDATE orders SET order_status = ? WHERE name_kross = ?",
+      ["Оплачено", selectedPhoto.name]
+    );
 
-  let bonus = user[0].bonus_count + (rows[0].price / 100) * 3;
-  let orders_count = user[0].orders_count + 1;
+    let bonus = user[0].bonus_count + (rows[0].price / 100) * 3;
+    let orders_count = user[0].orders_count + 1;
 
-  await connection.execute(
-    "UPDATE users SET bonus_count = ?, orders_count = ? WHERE chat_id = ?",
-    [bonus, orders_count, chat_id]
-  );
-  orders_count = 0;
-  bonus = 0;
+    await connection.execute(
+      "UPDATE users SET bonus_count = ?, orders_count = ? WHERE chat_id = ?",
+      [bonus, orders_count, chat_id]
+    );
+    orders_count = 0;
+    bonus = 0;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
 }
 
 async function get_currentOrder(chat_id) {
@@ -516,25 +553,19 @@ async function check_payment(chat_id) {
   const connection = await createConnection();
   try {
     const [rows] = await connection.execute(
-      "SELECT * FROM orders WHERE chat_id =? AND order_status =? AND ordered =?",
-      [chat_id, "Оплачено", "Доставка"]
+      "SELECT * FROM orders WHERE chat_id =? AND order_status =?",
+      [chat_id, "Оплачено"]
     );
 
+    console.log("rows in db: ", rows);
+
     if (rows.length > 0) {
-      const result = shooes.map((row) => ({
-        order_id: row.order_id,
-        order_status: row.order_status,
-        ordered: row.ordered,
-        name: row.name_kross,
-        size: row.size,
-        price: row.price,
-        email: row.email,
-      }));
-      return result;
+      return true;
     } else {
       return false;
     }
   } catch (error) {
+    console.log(error);
     return false;
   }
 }

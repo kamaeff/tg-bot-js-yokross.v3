@@ -29,12 +29,11 @@ async function start(bot, chatId, username, userSessions) {
     }),
   });
 }
-
 async function start_admin(bot, chatId) {
   await bot.sendMessage(
     chatId,
     `<b><i>✌🏻 Yo AdminPanel</i></b>\n\n` +
-      `<i><b>Created by: </b>Anton Kamaev\n@yokross_bot Alfa-version(v2)</i>`,
+      `<i><b>Created by: </b>Anton Kamaev\n@yokross_bot Alfa-version(v3)</i>`,
     {
       parse_mode: "HTML",
       reply_markup: JSON.stringify(admin_btns),

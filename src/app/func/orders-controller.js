@@ -1,30 +1,16 @@
-const { chatOptions_profile } = require('./btns')
-const { Photo_orders } = require('./carusel')
+const { chatOptions_profile } = require("./btns");
 
-async function showorders(bot, orders, chatId, userSession, userSessions, msg) {
+async function showorders(bot, orders, chatId, userStorage, msg) {
   if (orders === false) {
-    bot.sendMessage(
-      chatId,
-      `✌🏼 Yo ${msg.message.chat.first_name}, ты еще не сделал ни одного заказа!\n\n` +
-        `Ты можешь выбрать кроссовки в <i><b>⚡️ Show Room</b></i> или найти пару по фильтру <i><b>🔎 Поиск пары</b></i>`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: JSON.stringify(chatOptions_profile),
-      }
-    )
   } else {
-    userSession = {
-      photos: orders,
-      currentIndex: 0,
-    }
-    userSessions.set(chatId, userSession)
+    userStorage[chatId] = { photos: orders, currentIndex: 0 };
 
-    if (userSession.photos.length > 0) {
-      const currentIndex = userSession.currentIndex
-      const currentPhoto = userSession.photos[currentIndex]
-      const totalPhotos = userSession.photos.length
-      const showPrevButton = currentIndex > 0
-      const showNextButton = currentIndex < totalPhotos - 1
+    if (userStorage[chatId].photos.length > 0) {
+      const currentIndex = userStorage[chatId].currentIndex;
+      const currentPhoto = userStorage[chatId].photos[currentIndex];
+      const totalPhotos = userStorage[chatId].photos.length;
+      const showPrevButton = currentIndex > 0;
+      const showNextButton = currentIndex < totalPhotos - 1;
 
       bot.sendPhoto(chatId, currentPhoto.path, {
         caption:
@@ -34,78 +20,115 @@ async function showorders(bot, orders, chatId, userSession, userSessions, msg) {
           `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
           `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
           `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>`,
-        parse_mode: 'HTML',
+        parse_mode: "HTML",
         reply_markup: JSON.stringify({
           inline_keyboard: [
             [
               {
-                text: showPrevButton ? '<<' : '',
-                callback_data: 'prev_photo_o',
+                text: showPrevButton ? "<<" : "",
+                callback_data: "prev_photo_o",
               },
               {
                 text: `${currentIndex + 1}/${totalPhotos}`,
-                callback_data: 'dummy',
+                callback_data: "dummy",
               },
               {
-                text: showNextButton ? '>>' : '',
-                callback_data: 'next_photo_o',
+                text: showNextButton ? ">>" : "",
+                callback_data: "next_photo_o",
               },
             ],
-            [{ text: '🏠 Выход в главное меню', callback_data: 'home' }],
+            [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
           ],
         }),
-      })
+      });
     }
   }
 }
 
-async function next_photo_o(bot, userSession, userSessions, chatId) {
-  if (userSession && userSession.photos.length > 0) {
-    const currentIndex = userSession.currentIndex
-    const nextIndex = currentIndex + 1
+async function Photo_orders(
+  bot,
+  chatId,
+  userSession,
+  currentIndex,
+  photo,
+  totalPhotos,
+  showPrevButton
+) {
+  const showNext = currentIndex + 1 < totalPhotos;
+  await bot.sendPhoto(chatId, photo.path, {
+    caption:
+      `👟 <b>Кроссовки ${photo.name}</b>\n\n` +
+      `🧵 <b>Характеристики:</b>\n\n` +
+      `➖ <b>Цвет:</b> <i>${photo.color}</i>\n` +
+      `➖ <b>Материал:</b> <i>${photo.material}</i>\n` +
+      `➖ <b>Размер:</b> <i>${photo.size} us</i>\n\n` +
+      `💸 <b>Цена:</b> <code>${photo.price}₽</code>`,
+    parse_mode: "HTML",
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          { text: showPrevButton ? "<<" : "", callback_data: "prev_photo_o" },
+          {
+            text: `${currentIndex + 1}/${totalPhotos}`,
+            callback_data: "dummy",
+          },
+          { text: showNext ? ">>" : "", callback_data: "next_photo_o" },
+        ],
+        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+      ],
+    }),
+  });
+}
 
-    if (nextIndex < userSession.photos.length) {
-      const nextPhoto = userSession.photos[nextIndex]
-      const totalPhotos = userSession.photos.length
+async function next_photo_o(bot, userStorage, chatId) {
+  if (userStorage[chatId]) {
+    const currentIndex = userStorage[chatId].currentIndex;
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < userStorage[chatId].photos.length) {
+      const nextPhoto = userStorage[chatId].photos[nextIndex];
+      const totalPhotos = userStorage[chatId].photos.length;
 
       await Photo_orders(
         bot,
         chatId,
-        userSession,
+        userStorage,
         nextIndex,
         nextPhoto,
         totalPhotos,
         true
-      )
+      );
 
-      userSession.currentIndex = nextIndex
-      userSessions.set(chatId, userSession)
+      userStorage.currentIndex = nextIndex;
     }
+  } else {
+    console.log("no more photos");
   }
 }
 
-async function prev_photo_o(bot, chatId, userSession, userSessions) {
-  if (userSession && userSession.photos.length > 0) {
-    const currentIndex = userSession.currentIndex
-    const prevIndex = currentIndex - 1
+async function prev_photo_o(bot, chatId, userStorage) {
+  if (userStorage[chatId]) {
+    const currentIndex = userStorage[chatId].currentIndex;
+    const prevIndex = currentIndex;
 
     if (prevIndex >= 0) {
-      const prevPhoto = userSession.photos[prevIndex]
-      const totalPhotos = userSession.photos.length
-      const showPrevButton = prevIndex > 0
+      const prevPhoto = userStorage[chatId].photos[prevIndex];
+      const totalPhotos = userStorage[chatId].photos.length;
+      const showPrevButton = prevIndex > 0;
 
       await Photo_orders(
         bot,
         chatId,
-        userSession,
+        userStorage,
         prevIndex,
         prevPhoto,
         totalPhotos,
         showPrevButton
-      )
-      userSession.currentIndex = prevIndex
-      userSessions.set(chatId, userSession)
+      );
+      userStorage[chatId].currentIndex = prevIndex;
     }
+  } else {
+    console.log("no more photos");
   }
 }
 
@@ -113,4 +136,4 @@ module.exports = {
   showorders,
   next_photo_o,
   prev_photo_o,
-}
+};

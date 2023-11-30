@@ -16,6 +16,7 @@ const {
   select_photo,
   getProfile,
   createPDF,
+  delOrder,
   add_gender,
   get_gender,
   past_orders,
@@ -74,9 +75,9 @@ const logger = winston.createLogger({
 
 const objectToString = (obj) => {
   if (typeof obj === "object") {
-    return JSON.stringify(obj, null, 2); // Convert object to a formatted JSON string
+    return JSON.stringify(obj, null, 2);
   }
-  return obj.toString(); // Use default toString for non-objects
+  return obj.toString();
 };
 
 // ============ StartMenu ============
@@ -469,10 +470,6 @@ module.exports = (bot) => {
                         text: "⏳ История заказов",
                         callback_data: "data_orders",
                       },
-                      {
-                        text: "🚚 Текущий заказ",
-                        callback_data: "current_order",
-                      },
                     ],
                     [
                       {
@@ -518,52 +515,38 @@ module.exports = (bot) => {
         }
         break;
 
-      case "current_order":
+      case "data_orders":
         bot.deleteMessage(chatId, messageId);
-        const current = await get_currentOrder(chatId);
-        logger.info(objectToString(current));
-        if (current === false) {
+        const orders = await past_orders(chatId);
+        console.log(orders);
+        if (orders === false) {
           bot.sendMessage(
             chatId,
-            `<b><i>${msg.message.chat.first_name}</i></b>, сейчас тебе ничего не доставляется!\n\n` +
-              `😔 Воспользуйся поиском кроссовок или можешь посмотреть что у нас есть.`,
+            `✌🏼 Yo ${msg.message.chat.first_name}, ты еще не сделал ни одного заказа!\n\n` +
+              `Ты можешь выбрать кроссовки в <i><b>⚡️ Show Room</b></i> или найти пару по фильтру <i><b>🔎 Поиск пары</b></i>`,
             {
               parse_mode: "HTML",
               reply_markup: JSON.stringify(chatOptions_profile),
             }
           );
         } else {
-          await showorders(
-            bot,
-            current,
-            chatId,
-            userSession,
-            userSessions,
-            msg
-          );
+          await showorders(bot, orders, chatId, userStorage, msg);
         }
-        break;
 
-      case "data_orders":
-        bot.deleteMessage(chatId, messageId);
-        const orders = await past_orders(chatId);
-        logger.info(objectToString(orders));
-
-        await showorders(bot, orders, chatId, userSession, userSessions, msg);
         break;
 
       case "next_photo_o":
         bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await next_photo_o(bot, userSession, userSessions, chatId);
+        await next_photo_o(bot, userStorage, chatId);
         break;
 
       case "prev_photo_o":
         bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await prev_photo_o(bot, chatId, userSession, userSessions);
+        await prev_photo_o(bot, chatId, userStorage);
         break;
 
       case "home":
@@ -670,6 +653,7 @@ module.exports = (bot) => {
             fio: profile.fio,
           };
           logger.info(objectToString(profile));
+          userStorage[chatId] = { order_id: chatId + Date.now() };
 
           userSessions.set(chatId, userSession);
           logger.info(userSession.locale, userSession.email, userSession.fio);
@@ -712,12 +696,15 @@ module.exports = (bot) => {
                   [
                     {
                       text: `💸 Оплатить заказ #${userSession.order_id}`,
-                      url: `https://stockhub.ru/payanyway.php?orderId=${userSession.order_id}`,
+                      url: `https://stockhub12.ru/payanyway.php?orderId=${userSession.order_id}`,
                     },
                   ],
                   [
                     { text: "✅ Я оплатил", callback_data: "payment" },
-                    { text: "🧨 Отменить заказ", callback_data: "home" },
+                    {
+                      text: "🧨 Отменить заказ",
+                      callback_data: "cancel_order",
+                    },
                   ],
                 ],
               }),
@@ -772,68 +759,92 @@ module.exports = (bot) => {
 
         break;
 
-      case "payment":
+      case "cancel_order":
         bot.deleteMessage(chatId, messageId);
 
+        const cancelOrder = await delOrder(userStorage[chatId].order_id);
+        if (cancelOrder === true) {
+          bot.sendMessage(
+            chatId,
+            `Yo <b><i>${msg.message.chat.first_name}</i></b>, заказа отменен.`,
+            {
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify(keyboard),
+            }
+          );
+          logger.info(
+            objectToString(
+              `Cancel order by ${msg.message.chat.username}: Order_id ${userStorage[chatId].order_id} - ${cancelOrder}`
+            )
+          );
+        } else {
+          logger.info(objectToString(cancelOrder));
+        }
+        break;
+
+      case "payment":
         if (userSession && userSession.photos) {
           selectedPhoto = userSession.photos[userSession.currentIndex];
         } else {
           console.error("userSession or photos is undefined or null.");
         }
 
-        // todo payment check
-        const res = check_payment(chatId);
-        logger.info(objectToString(res), "\n");
+        // todo payment check and confirm order
 
-        if (res != false) {
-          bot.sendMessage(
-            chatId,
-            `🤑 Yo <b><i>${msg.message.chat.first_name}</i></b>, оплата прошла успешно. В скором времени тебе отправится чек на почту!\n` +
-              `Так же в скором времени у тебя в профиле появится трек номер для отслеживания твоей посылки.\n\n`,
-            {
-              parse_mode: "HTML",
-            }
-          );
+        const res = await check_payment(chatId);
+        console.log(res);
 
-          await createPDF();
-          const fileStream = fs.createReadStream("output.csv");
+        // if (res == false) {
+        //   await delOrder(userStorage[chatId].order_id);
+        //   bot.sendMessage(
+        //     chatId,
+        //     `<i><b>Yo ${msg.message.chat.first_name}</b></i>, кажется ты не оплачивал заказ.</i>`,
+        //     {
+        //       parse_mode: "HTML",
+        //       reply_markup: JSON.stringify({
+        //         inline_keyboard: [
+        //           [
+        //             {
+        //               text: "🏠 Выход в главное меню",
+        //               callback_data: "home",
+        //             },
+        //           ],
+        //         ],
+        //       }),
+        //     }
+        //   );
+        // } else {
+        //   bot.deleteMessage(chatId, messageId);
+        //   bot.sendMessage(
+        //     chatId,
+        //     `🤑 Yo <b><i>${msg.message.chat.first_name}</i></b>, оплата прошла успешно. В скором времени тебе отправится чек на почту!\n` +
+        //       `Так же в скором времени у тебя в профиле появится трек номер для отслеживания твоей посылки.\n\n`,
+        //     {
+        //       parse_mode: "HTML",
+        //       reply_markup: JSON.stringify(keyboard),
+        //     }
+        //   );
 
-          bot.sendPhoto(process.env.GROUP_ADMIN, selectedPhoto.path, {
-            caption:
-              `<b>🤑 Status</b>: <i> Новый оплаченный заказ</i>\n` +
-              `@DreasTamyot новый заказ от ${msg.message.chat.first_name} (${chatId})\n\n` +
-              `Кроссовки: <i>${selectedPhoto.name}</i>\n` +
-              `Размер: <i>${selectedPhoto.size} us</i>\n` +
-              `Цена: <i>${selectedPhoto.price}Р</i>\n\n` +
-              `Тг ссылка на пользователя: <i><b>@${user_callBack}</b></i>`,
-            parse_mode: "HTML",
-          });
-          bot.sendDocument(process.env.GROUP_ADMIN, fileStream);
+        //   await createPDF();
+        //   const fileStream = fs.createReadStream("output.csv");
 
-          await select_photo(selectedPhoto);
-          await update_bonus(selectedPhoto, chatId);
-          logger.info(
-            `User ${msg.message.chat.first_name} paid and update bonuses.`
-          );
-        } else {
-          bot.sendMessage(
-            chatId,
-            `<i><b>Yo ${msg.message.chat.first_name}</b></i>, кажется ты не оплачивал заказ.</i>`,
-            {
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify({
-                inline_keyboard: [
-                  [
-                    {
-                      text: "🏠 Выход в главное меню",
-                      callback_data: "home",
-                    },
-                  ],
-                ],
-              }),
-            }
-          );
-        }
+        //   bot.sendPhoto(process.env.GROUP_ADMIN, selectedPhoto.path, {
+        //     caption:
+        //       `<b>🤑 Status</b>: <i> Новый оплаченный заказ</i>\n` +
+        //       `@DreasTamyot новый заказ от ${msg.message.chat.first_name} (${chatId})\n\n` +
+        //       `Кроссовки: <i>${selectedPhoto.name}</i>\n` +
+        //       `Размер: <i>${selectedPhoto.size} us</i>\n` +
+        //       `Цена: <i>${selectedPhoto.price}Р</i>\n\n` +
+        //       `Тг ссылка на пользователя: <i><b>@${user_callBack}</b></i>`,
+        //     parse_mode: "HTML",
+        //   });
+        //   bot.sendDocument(process.env.GROUP_ADMIN, fileStream);
+
+        //   await update_bonus(selectedPhoto, chatId);
+        //   logger.info(
+        //     `User ${msg.message.chat.first_name} paid and update bonuses.`
+        //   );
+        // }
         break;
     }
   });
