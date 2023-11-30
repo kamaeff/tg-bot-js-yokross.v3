@@ -783,16 +783,18 @@ module.exports = (bot) => {
         break;
 
       case "payment":
-        if (userSession && userSession.photos) {
-          selectedPhoto = userSession.photos[userSession.currentIndex];
-        } else {
-          console.error("userSession or photos is undefined or null.");
-        }
+        tech(bot, chatId, msg.message.chat.username);
 
-        // todo payment check and confirm order
+        // if (userSession && userSession.photos) {
+        //   selectedPhoto = userSession.photos[userSession.currentIndex];
+        // } else {
+        //   console.error("userSession or photos is undefined or null.");
+        // }
 
-        const res = await check_payment(chatId);
-        console.log(res);
+        // // todo payment check and confirm order
+
+        // const res = await check_payment(chatId);
+        // console.log(res);
 
         // if (res == false) {
         //   await delOrder(userStorage[chatId].order_id);
