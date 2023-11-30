@@ -179,7 +179,7 @@ module.exports = (bot) => {
 
       case "donate":
         bot.sendMessage(
-          msg.chat.id,
+          chatId,
           `✌🏻 Yo <b>${msg.message.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
             `<b>Тинькофф: </b><code>5536 9139 7089 6656</code>\n`,
           { parse_mode: "HTML" }
