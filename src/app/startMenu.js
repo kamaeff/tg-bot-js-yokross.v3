@@ -683,7 +683,7 @@ module.exports = (bot) => {
               userSession.fio
             );
 
-            //logger.info(`Add to DB: ${objectToString(addting)}`);
+            logger.info(`Add to DB: ${objectToString(addting)}`);
             bot.sendPhoto(chatId, selectedPhoto.path, {
               caption:
                 `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
@@ -887,6 +887,12 @@ module.exports = (bot) => {
           } else {
             userStorage[chatId] = { photo: buff, currentIndex: 0 };
             selectedPhoto = userStorage[chatId].photo;
+
+            logger.info(
+              `Output articul by ${msg.chat.username}: ${objectToString(
+                selectedPhoto
+              )}`
+            );
 
             bot.sendPhoto(chatId, selectedPhoto[0].path, {
               caption:
