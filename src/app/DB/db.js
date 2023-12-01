@@ -526,7 +526,7 @@ async function add_location(chat_id, address) {
 
   try {
     await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
-      address,
+      "доставка boxberry - " + address,
       chat_id,
     ]);
     return true;
@@ -598,6 +598,20 @@ async function search_articul(articul) {
   }
 }
 
+async function add_msk(chat_id, msk) {
+  const connection = await createConnection();
+  try {
+    await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
+      "доставка по мск - " + msk,
+      chat_id,
+    ]);
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
 module.exports = {
   add_user,
   send_photo,
@@ -621,4 +635,5 @@ module.exports = {
   add_fio,
   check_payment,
   search_articul,
+  add_msk,
 };

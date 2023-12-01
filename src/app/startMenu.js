@@ -31,6 +31,7 @@ const {
   add_fio,
   check_payment,
   search_articul,
+  add_msk,
 } = require("./DB/db");
 
 const { sendPhotoWithNavigation } = require("./func/carusel");
@@ -184,7 +185,7 @@ module.exports = (bot) => {
 
         bot.sendMessage(
           chatId,
-          `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе.\n\n` +
+          `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе или адресс ПВЗ Boxberry.\n\n` +
             `<i>P.S Если не знаешь где находятся <i><b>ПВЗ Boxberry</b></i>, то можешь посмотреть на карте</i>\n\n` +
             `<i>Пример ввода: Москва, Красная Пресня 28</i>`,
           {
@@ -267,7 +268,6 @@ module.exports = (bot) => {
         break;
 
       case "choose":
-        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           bot.sendMessage(
@@ -409,7 +409,6 @@ module.exports = (bot) => {
         break;
 
       case "profile":
-        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
 
         if (check === true) {
@@ -442,7 +441,7 @@ module.exports = (bot) => {
                 }</i>\n` +
                 `● <b>Всего заказов сделано:</b> <i>${userSession.orders}</i>\n` +
                 `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>\n` +
-                `● <b>Адрес ПВЗ Boxberry:</b> <i>${
+                `● <b>Способ доставки:</b> <i>${
                   userSession.locale.length === 0
                     ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>📦 Обновить адрес ПВЗ</b>`
                     : userSession.locale
@@ -462,10 +461,8 @@ module.exports = (bot) => {
                         text: "⏳ История заказов",
                         callback_data: "data_orders",
                       },
-                    ],
-                    [
                       {
-                        text: "📦 Обновить адрес ПВЗ",
+                        text: "📦 Обновить адрес",
                         callback_data: "locale",
                       },
                     ],
@@ -585,7 +582,6 @@ module.exports = (bot) => {
         break;
 
       case "show":
-        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
@@ -602,21 +598,15 @@ module.exports = (bot) => {
               }
             );
           } else {
-            if (!userSession) {
-              userSession = {
-                photos: photosWithDescriptions,
-                currentIndex: 0,
-              };
-              userSessions.set(chatId, userSession);
-            } else {
-              userSession.photos = photosWithDescriptions;
-              userSession.currentIndex = 0;
-            }
+            userStorage[chatId] = {
+              photo: photosWithDescriptions,
+              currentIndex: 0,
+            };
 
-            if (userSession.photos.length > 0) {
-              const currentIndex = userSession.currentIndex;
-              const firstPhoto = userSession.photos[currentIndex];
-              const totalPhotos = userSession.photos.length;
+            if (userStorage[chatId].photo.length > 0) {
+              const currentIndex = userStorage[chatId].currentIndex;
+              const firstPhoto = userStorage[chatId].photo[currentIndex];
+              const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
               await sendPhotoWithNavigation(
@@ -637,21 +627,54 @@ module.exports = (bot) => {
         bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await next_photo(bot, chatId, userSession, userSessions);
+        await next_photo(bot, chatId, userStorage);
         break;
 
       case "prev_photo":
         bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await prev_photo(bot, chatId, userSession, userSessions);
+        await prev_photo(bot, chatId, userStorage);
+        break;
+
+      case "order_msk":
+        bot.deleteMessage(chatId, messageId);
+
+        bot.sendMessage(
+          chatId,
+          `Yo <i><b>${msg.message.chat.first_name}</b></i>, доставка по Москве возможна нашим курьером. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.\n\n` +
+            `<i>На какой адрес курьеру доставить твой кроссовки: </i>`,
+          {
+            parse_mode: "HTML",
+            reply_markup: JSON.stringify({
+              inline_keyboard: [
+                [
+                  {
+                    text: "🧨 Отмена",
+                    callback_data: "cancel",
+                  },
+                ],
+              ],
+            }),
+          }
+        );
+
+        console.log(
+          userStorage[chatId].photo[userStorage[chatId].currentIndex]
+        );
+
+        userStorage[chatId] = {
+          state: "_msk",
+          photo: userStorage[chatId].photo[userStorage[chatId].currentIndex],
+        };
         break;
 
       case "order":
         bot.deleteMessage(chatId, messageId);
 
-        selectedPhoto =
-          userStorage[chatId].photo[userStorage[chatId].currentIndex];
+        console.log("in order:", userStorage[chatId].photo);
+
+        selectedPhoto = userStorage[chatId].photo;
 
         const profileData = await getProfile(chatId);
         if (profileData.length > 0) {
@@ -683,7 +706,7 @@ module.exports = (bot) => {
               userSession.fio
             );
 
-            logger.info(`Add to DB: ${objectToString(addting)}`);
+            //logger.info(`Add to DB: ${objectToString(addting)}`);
             bot.sendPhoto(chatId, selectedPhoto.path, {
               caption:
                 `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
@@ -869,6 +892,7 @@ module.exports = (bot) => {
 
     if (userStorage[chatId]) {
       const currentState = userStorage[chatId].state;
+
       switch (currentState) {
         case "articul":
           userStorage[chatId].articul = userText;
@@ -920,6 +944,39 @@ module.exports = (bot) => {
                 ],
               }),
             });
+          }
+          break;
+
+        case "_msk":
+          userStorage[chatId].msk = userText;
+
+          if (userStorage[chatId].msk.length > 0) {
+            const add = await add_msk(chatId, userStorage[chatId].msk);
+
+            if (add === true) {
+              console.log(`in msk: `, userStorage[chatId].photo);
+              bot.sendMessage(
+                chatId,
+                `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел ${userText}\n\n` +
+                  `Для подтверждения нажмите <b>✅ Подтвердить</b>`,
+                {
+                  parse_mode: "HTML",
+                  reply_markup: JSON.stringify({
+                    inline_keyboard: [
+                      [{ text: "✅ Подтвердить", callback_data: "order" }],
+                      [
+                        {
+                          text: "🏠 Выход в главное меню",
+                          callback_data: "exit",
+                        },
+                      ],
+                    ],
+                  }),
+                }
+              );
+            }
+          } else {
+            console.log("error");
           }
           break;
 

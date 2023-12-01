@@ -1,61 +1,52 @@
-const { keyboard } = require('./btns')
-const { sendPhotoWithNavigation } = require('./carusel')
+const { keyboard } = require("./btns");
+const { sendPhotoWithNavigation } = require("./carusel");
 
-async function showmenu(
-  photosWithDescriptions,
-  bot,
-  chatId,
-  userSession,
-  userSessions
-) {
-}
+async function showmenu(photosWithDescriptions, bot, chatId, userStorage) {}
 
-async function next_photo(bot, chatId, userSession, userSessions) {
-  if (userSession && userSession.photos.length > 0) {
-    const currentIndex = userSession.currentIndex
-    const nextIndex = currentIndex + 1
+async function next_photo(bot, chatId, userStorage) {
+  if (userStorage[chatId] && userStorage[chatId].photo.length > 0) {
+    const currentIndex = userStorage[chatId].currentIndex;
+    const nextIndex = currentIndex + 1;
 
-    if (nextIndex < userSession.photos.length) {
-      const nextPhoto = userSession.photos[nextIndex]
-      const totalPhotos = userSession.photos.length
+    if (nextIndex < userStorage[chatId].photo.length) {
+      const nextPhoto = userStorage[chatId].photo[nextIndex];
+      const totalPhotos = userStorage[chatId].photo.length;
 
       await sendPhotoWithNavigation(
         bot,
         chatId,
-        userSession,
+        userStorage,
         nextIndex,
         nextPhoto,
         totalPhotos,
         true
-      )
+      );
 
-      userSession.currentIndex = nextIndex
-      userSessions.set(chatId, userSession)
+      userStorage[chatId].currentIndex = nextIndex;
     }
   }
 }
 
-async function prev_photo(bot, chatId, userSession, userSessions) {
-  if (userSession && userSession.photos.length > 0) {
-    const currentIndex = userSession.currentIndex
-    const prevIndex = currentIndex - 1
+async function prev_photo(bot, chatId, userStorage) {
+  if (userStorage && userStorage[chatId].photo.length > 0) {
+    const currentIndex = userStorage[chatId].currentIndex;
+    const prevIndex = currentIndex - 1;
 
     if (prevIndex >= 0) {
-      const prevPhoto = userSession.photos[prevIndex]
-      const totalPhotos = userSession.photos.length
-      const showPrevButton = prevIndex > 0
+      const prevPhoto = userStorage[chatId].photo[prevIndex];
+      const totalPhotos = userStorage[chatId].photo.length;
+      const showPrevButton = prevIndex > 0;
 
       await sendPhotoWithNavigation(
         bot,
         chatId,
-        userSession,
+        userStorage,
         prevIndex,
         prevPhoto,
         totalPhotos,
         showPrevButton
-      )
-      userSession.currentIndex = prevIndex
-      userSessions.set(chatId, userSession)
+      );
+      userStorage[chatId].currentIndex = prevIndex;
     }
   }
 }
@@ -64,4 +55,4 @@ module.exports = {
   showmenu,
   next_photo,
   prev_photo,
-}
+};
