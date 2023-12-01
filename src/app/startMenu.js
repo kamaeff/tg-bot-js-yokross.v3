@@ -99,6 +99,12 @@ module.exports = (bot) => {
     }
   });
 
+  bot.onText(/\/time/, async (msg) => {
+    let c = await check_order_status();
+
+    bot.sendMessage(msg.chat.id, `msg ${c}`);
+  });
+
   bot.onText(/\/guide/, async (msg) => {
     bot.sendMessage(
       msg.chat.id,
@@ -637,44 +643,46 @@ module.exports = (bot) => {
         await prev_photo(bot, chatId, userStorage);
         break;
 
-      case "order_msk":
-        bot.deleteMessage(chatId, messageId);
+      // case "order_msk":
+      //   bot.deleteMessage(chatId, messageId);
 
-        bot.sendMessage(
-          chatId,
-          `Yo <i><b>${msg.message.chat.first_name}</b></i>, доставка по Москве возможна нашим курьером. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.\n\n` +
-            `<i>На какой адрес курьеру доставить твой кроссовки: </i>`,
-          {
-            parse_mode: "HTML",
-            reply_markup: JSON.stringify({
-              inline_keyboard: [
-                [
-                  {
-                    text: "🧨 Отмена",
-                    callback_data: "cancel",
-                  },
-                ],
-              ],
-            }),
-          }
-        );
+      //   bot.sendMessage(
+      //     chatId,
+      //     `Yo <i><b>${msg.message.chat.first_name}</b></i>, доставка по Москве возможна нашим курьером. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.\n\n` +
+      //       `<i>На какой адрес курьеру доставить твой кроссовки: </i>`,
+      //     {
+      //       parse_mode: "HTML",
+      //       reply_markup: JSON.stringify({
+      //         inline_keyboard: [
+      //           [
+      //             {
+      //               text: "🧨 Отмена",
+      //               callback_data: "cancel",
+      //             },
+      //           ],
+      //         ],
+      //       }),
+      //     }
+      //   );
 
-        console.log(
-          userStorage[chatId].photo[userStorage[chatId].currentIndex]
-        );
+      //   console.log(
+      //     userStorage[chatId].photo[userStorage[chatId].currentIndex]
+      //   );
 
-        userStorage[chatId] = {
-          state: "_msk",
-          photo: userStorage[chatId].photo[userStorage[chatId].currentIndex],
-        };
-        break;
+      //   userStorage[chatId] = {
+      //     state: "_msk",
+      //     photo: userStorage[chatId].photo[userStorage[chatId].currentIndex],
+      //     currentIndex: userStorage[chatId].currentIndex,
+      //   };
+      //   break;
 
       case "order":
         bot.deleteMessage(chatId, messageId);
 
-        console.log("in order:", userStorage[chatId].photo);
+        selectedPhoto =
+          userStorage[chatId].photo[userStorage[chatId].currentIndex];
 
-        selectedPhoto = userStorage[chatId].photo;
+        console.log(selectedPhoto);
 
         const profileData = await getProfile(chatId);
         if (profileData.length > 0) {
@@ -753,33 +761,7 @@ module.exports = (bot) => {
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify({
                   inline_keyboard: [
-                    [
-                      {
-                        text:
-                          userSession.email.length === 0
-                            ? "✉️ Заполнить почту"
-                            : "",
-                        callback_data: "email",
-                      },
-                    ],
-                    [
-                      {
-                        text:
-                          userSession.locale.length === 0
-                            ? "🌐 Заполнить адрес ПВЗ"
-                            : "",
-                        callback_data: "locale",
-                      },
-                    ],
-                    [
-                      {
-                        text:
-                          userSession.fio.length === 0
-                            ? "👤 Заполнить ФИО"
-                            : "",
-                        callback_data: "email",
-                      },
-                    ],
+                    [{ text: "Заполнить профиль", callback_data: "profile" }],
                     [
                       {
                         text: "🏠 Выход в главное меню",
@@ -947,38 +929,46 @@ module.exports = (bot) => {
           }
           break;
 
-        case "_msk":
-          userStorage[chatId].msk = userText;
+        // case "_msk":
+        //   userStorage[chatId].msk = userText;
 
-          if (userStorage[chatId].msk.length > 0) {
-            const add = await add_msk(chatId, userStorage[chatId].msk);
+        //   if (userStorage[chatId].msk.length > 0) {
+        //     const add = await add_msk(chatId, userStorage[chatId].msk);
 
-            if (add === true) {
-              console.log(`in msk: `, userStorage[chatId].photo);
-              bot.sendMessage(
-                chatId,
-                `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел ${userText}\n\n` +
-                  `Для подтверждения нажмите <b>✅ Подтвердить</b>`,
-                {
-                  parse_mode: "HTML",
-                  reply_markup: JSON.stringify({
-                    inline_keyboard: [
-                      [{ text: "✅ Подтвердить", callback_data: "order" }],
-                      [
-                        {
-                          text: "🏠 Выход в главное меню",
-                          callback_data: "exit",
-                        },
-                      ],
-                    ],
-                  }),
-                }
-              );
-            }
-          } else {
-            console.log("error");
-          }
-          break;
+        //     if (add === true) {
+        //       console.log(`in msk: `, userStorage[chatId].photo);
+
+        //       userStorage[chatId] = {
+        //         photo: userStorage[chatId].photo,
+        //         currentIndex: userStorage[chatId].currentIndex,
+        //       };
+
+        //       console.log(`in msk: `, userStorage[chatId]);
+
+        //       bot.sendMessage(
+        //         chatId,
+        //         `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел ${userText}\n\n` +
+        //           `Для подтверждения нажмите <b>✅ Подтвердить</b>`,
+        //         {
+        //           parse_mode: "HTML",
+        //           reply_markup: JSON.stringify({
+        //             inline_keyboard: [
+        //               [{ text: "✅ Подтвердить", callback_data: "order" }],
+        //               [
+        //                 {
+        //                   text: "🏠 Выход в главное меню",
+        //                   callback_data: "exit",
+        //                 },
+        //               ],
+        //             ],
+        //           }),
+        //         }
+        //       );
+        //     }
+        //   } else {
+        //     console.log("error");
+        //   }
+        //   break;
 
         case "awaitingAddress":
           userStorage[chatId].address = userText;

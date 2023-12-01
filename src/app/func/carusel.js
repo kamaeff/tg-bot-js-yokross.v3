@@ -30,7 +30,7 @@ async function sendPhotoWithNavigation(
         ],
         [
           { text: "🇷🇺 Заказ по России", callback_data: "order" },
-          { text: "🛒 Заказ по МСК", callback_data: "order_msk" },
+          //{ text: "🛒 Заказ по МСК", callback_data: "order_msk" },
         ],
         [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
       ],
