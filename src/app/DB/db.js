@@ -575,8 +575,8 @@ async function search_articul(articul) {
   const connection = await createConnection();
   try {
     const [rows] = await connection.execute(
-      "SELECT * FROM Updates WHERE artilul =?",
-      [articul]
+      "SELECT * FROM Updates WHERE artilul =? AND flag_order =?",
+      [articul, 0]
     );
 
     if (rows.length > 0) {

@@ -884,7 +884,7 @@ module.exports = (bot) => {
           if (buff === false) {
             bot.sendMessage(
               chatId,
-              `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул.`,
+              `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
               {
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify(keyboard),
