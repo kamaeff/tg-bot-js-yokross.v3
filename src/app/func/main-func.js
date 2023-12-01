@@ -23,8 +23,8 @@ async function start(bot, chatId, username, userSessions) {
           { text: "🔎 Поиск пары", callback_data: "choose" },
           { text: "⚡️ ShowRoom", callback_data: "show" },
         ],
+        [{ text: "📝 Поиск по артиклу", callback_data: "articul" }],
         [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
-        [{ text: "🍩 Помощь проекту", callback_data: "donate" }],
       ],
     }),
   });

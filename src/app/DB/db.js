@@ -144,7 +144,7 @@ async function send_dynamic_add_photo() {
 
   try {
     const [rows] = await connection.execute(
-      "SELECT photo_path, material,price,name,size,color, gender_option FROM Updates WHERE flag_order = ?",
+      "SELECT photo_path, material,price,name,size,color, gender_option, artilul FROM Updates WHERE flag_order = ?",
       [0]
     );
     if (rows.length > 0) {
@@ -156,6 +156,7 @@ async function send_dynamic_add_photo() {
         size: row.size,
         color: row.color,
         gender: row.gender_option,
+        articul: row.artilul,
       }));
 
       return photosWithDescriptions;
@@ -570,6 +571,33 @@ async function check_payment(chat_id) {
   }
 }
 
+async function search_articul(articul) {
+  const connection = await createConnection();
+  try {
+    const [rows] = await connection.execute(
+      "SELECT * FROM Updates WHERE artilul =?",
+      [articul]
+    );
+
+    if (rows.length > 0) {
+      const res = rows.map((row) => ({
+        path: row.photo_path,
+        material: row.material,
+        price: row.price,
+        name: row.name,
+        size: row.size,
+        color: row.color,
+      }));
+      return res;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
 module.exports = {
   add_user,
   send_photo,
@@ -592,4 +620,5 @@ module.exports = {
   add_location,
   add_fio,
   check_payment,
+  search_articul,
 };
