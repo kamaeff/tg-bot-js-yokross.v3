@@ -274,6 +274,7 @@ module.exports = (bot) => {
         break;
 
       case "choose":
+        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           bot.sendMessage(
@@ -286,7 +287,7 @@ module.exports = (bot) => {
                   [{ text: "👟 Лайфстайл", callback_data: "lifestyle" }],
                   [{ text: "🏀 Баскетбольные", callback_data: "basket" }],
                   [{ text: "⚽️ Футбольные", callback_data: "football" }],
-                  [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+                  [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
                 ],
               }),
             }
@@ -437,8 +438,9 @@ module.exports = (bot) => {
               chat_id === process.env.LOGIST ||
               chat_id === process.env.SERVIRCE_ID;
 
-            await bot.sendMessage(
-              chatId,
+            console.log(msg.message.message_id);
+
+            await bot.editMessageCaption(
               `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
                 `● <b>ФИО:</b> <i>${
                   userSession.fio.length === 0
@@ -459,6 +461,8 @@ module.exports = (bot) => {
                 }</i>\n\n` +
                 `<i><b>P.S</b> Email, Адрес ПВЗ и ФИО нужны для формирования заказа</i>`,
               {
+                chat_id: chatId,
+                message_id: msg.message.message_id,
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify({
                   inline_keyboard: [
@@ -576,6 +580,7 @@ module.exports = (bot) => {
         break;
 
       case "exit":
+        bot.deleteMessage(chatId, messageId);
         await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
@@ -588,6 +593,7 @@ module.exports = (bot) => {
         break;
 
       case "show":
+        bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
