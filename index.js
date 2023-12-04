@@ -12,7 +12,7 @@ const main = async () => {
   console.log("Bot create by Anton Kamaev");
 
   bot.setMyCommands([
-    { command: "/start", description: "Перезапуск бота" },
+    { command: "/start", description: "Перезапуск главного меню" },
     { command: "/commands", description: "Дополнительные команды бота" },
     { command: "/donate", description: "Поддержать разработчиков" },
     { command: "/guide", description: "Как правильно заказать кроссовки" },

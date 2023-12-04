@@ -1,8 +1,7 @@
 const { admin_btns } = require("./btns");
-const { send_photo, add_user } = require("../DB/db");
+const { send_photo, add_user, getProfile } = require("../DB/db");
 
-async function start(bot, chatId, username, userSessions) {
-  userSessions.delete(chatId);
+async function start(bot, chatId, username) {
   chatId = chatId.toString();
   await bot.sendPhoto(chatId, "./src/app/img/Logo.png", {
     caption:
@@ -58,6 +57,98 @@ async function start_update(bot, chatId, username, messageid) {
       }),
     }
   );
+}
+
+async function profile(bot, chatId, userStorage, username, messageid) {
+  const profileData = await getProfile(chatId);
+  if (profileData.length > 0) {
+    const profile = profileData[0];
+    userStorage[chatId] = {
+      orders: profile.orders,
+      locale: profile.locale,
+      bonuses: profile.bonus,
+      email: profile.email,
+      fio: profile.fio,
+    };
+
+    const chat_id = chatId.toString();
+    const chat =
+      chat_id === process.env.GROUP_ADMIN ||
+      chat_id === process.env.ADMIN_ID ||
+      chat_id === process.env.LOGIST ||
+      chat_id === process.env.SERVIRCE_ID;
+
+    await bot.editMessageCaption(
+      `📈 <b>Вот твоя стата ${username}:</b>\n\n` +
+        `● <b>ФИО:</b> <i>${
+          userStorage[chatId].fio.length === 0
+            ? `\nЯ только знаю как тебя зовут.\nДобавь свое ФИО <b>👤 Заполнить ФИО"</b>`
+            : userStorage[chatId].fio
+        }</i>\n` +
+        `● <b>Всего заказов сделано:</b> <i>${userStorage[chatId].orders}</i>\n` +
+        `● <b>Бонусы:</b> <i>${userStorage[chatId].bonuses}</i>\n` +
+        `● <b>Способ доставки:</b> <i>${
+          userStorage[chatId].locale.length === 0
+            ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>📦 Обновить адрес ПВЗ</b>`
+            : userStorage[chatId].locale
+        }</i>\n` +
+        `● <b>Email:</b> <i>${
+          userStorage[chatId].email.length === 0
+            ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить email</b>, чтобы заполнить почту`
+            : userStorage[chatId].email
+        }</i>\n\n` +
+        `<i><b>P.S</b> Email, Адрес ПВЗ и ФИО нужны для формирования заказа</i>\n Так же заметь при заполнении адреса доставки по мск укажи это в скобках. Пример: <i>Москва, Генерала Кузнецова 21 к2, кв. 22</i>`,
+      {
+        chat_id: chatId,
+        message_id: messageid,
+        parse_mode: "HTML",
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [
+              {
+                text: "⏳ История заказов",
+                callback_data: "data_orders",
+              },
+              {
+                text: "📦 Обновить адрес",
+                callback_data: "locale",
+              },
+            ],
+            [
+              {
+                text:
+                  userStorage[chatId].email.length === 0
+                    ? "✉️ Заполнить email"
+                    : "",
+                callback_data: "email",
+              },
+            ],
+            [
+              {
+                text:
+                  userStorage[chatId].fio.length === 0
+                    ? "👤 Заполнить ФИО"
+                    : "",
+                callback_data: "fio",
+              },
+            ],
+            [
+              {
+                text: chat ? "📑 Админка" : "",
+                callback_data: "admin",
+              },
+            ],
+            [
+              {
+                text: "🏠 Выход в главное меню",
+                callback_data: "exit",
+              },
+            ],
+          ],
+        }),
+      }
+    );
+  }
 }
 
 async function start_admin(bot, chatId) {
@@ -139,4 +230,5 @@ module.exports = {
   start_admin,
   check_folow,
   start_update,
+  profile,
 };

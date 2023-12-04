@@ -41,6 +41,7 @@ const {
   start_admin,
   check_folow,
   start_update,
+  profile,
 } = require("./func/main-func");
 
 const { admins } = require("./func/admin");
@@ -99,7 +100,7 @@ module.exports = (bot) => {
     console.log(check);
     if (check === true) {
       // bot.deleteMessage(chatId, messageId);
-      await start(bot, chatId, msg.chat.first_name, userSessions);
+      await start(bot, chatId, msg.chat.first_name);
       const res = await add_user(chatId, msg.chat.username);
       logger.info(`User ${username} was auth. Database: ${res}`);
     }
@@ -193,15 +194,17 @@ module.exports = (bot) => {
         break;
 
       case "locale":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
-        bot.sendMessage(
-          chatId,
+        bot.editMessageCaption(
           `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе или адресс ПВЗ Boxberry.\n\n` +
             `<i>P.S Если не знаешь где находятся <i><b>ПВЗ Boxberry</b></i>, то можешь посмотреть на карте</i>\n\n` +
             `<i>Пример ввода для доставки по МСК: Москва, Генерала Кузнецова 21 к2, кв. 22</i>\n` +
             `<i>Пример ввода для доставки по России: Йошкар-Ола, Йывана Кырли 44</i>`,
           {
+            chat_id: chatId,
+            message_id: messageId,
+            parse_mode: "HTML",
             reply_markup: JSON.stringify({
               inline_keyboard: [
                 [
@@ -216,7 +219,6 @@ module.exports = (bot) => {
                 ],
               ],
             }),
-            parse_mode: "HTML",
           }
         );
 
@@ -224,12 +226,13 @@ module.exports = (bot) => {
         break;
 
       case "email":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
-        bot.sendMessage(
-          chatId,
+        bot.editMessageCaption(
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
           {
+            chat_id: chatId,
+            message_id: messageId,
             parse_mode: "HTML",
             reply_markup: JSON.stringify({
               inline_keyboard: [
@@ -248,12 +251,13 @@ module.exports = (bot) => {
         break;
 
       case "fio":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
-        bot.sendMessage(
-          chatId,
+        bot.editMessageCaption(
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свой ФИО (это надо для заполнения получателя при доставке)`,
           {
+            chat_id: chatId,
+            message_id: messageId,
             parse_mode: "HTML",
             reply_markup: JSON.stringify({
               inline_keyboard: [
@@ -273,7 +277,7 @@ module.exports = (bot) => {
 
       case "cancel":
         bot.deleteMessage(chatId, messageId);
-        start(bot, chatId, user_callBack, userSessions);
+        start(bot, chatId, user_callBack);
         break;
 
       case "choose":
@@ -419,101 +423,17 @@ module.exports = (bot) => {
         break;
 
       case "profile":
+        // bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
 
         if (check === true) {
-          const profileData = await getProfile(chatId);
-          if (profileData.length > 0) {
-            const profile = profileData[0];
-            userSession = {
-              orders: profile.orders,
-              locale: profile.locale,
-              bonuses: profile.bonus,
-              email: profile.email,
-              fio: profile.fio,
-            };
-            userSessions.set(chatId, userSession);
-            logger.info(objectToString(profileData));
-            const chat_id = msg.message.chat.id.toString();
-            const chat =
-              chat_id === process.env.GROUP_ADMIN ||
-              chat_id === process.env.ADMIN_ID ||
-              chat_id === process.env.LOGIST ||
-              chat_id === process.env.SERVIRCE_ID;
-
-            console.log(msg.message.message_id);
-
-            await bot.editMessageCaption(
-              `📈 <b>Вот твоя стата ${msg.message.chat.first_name}:</b>\n\n` +
-                `● <b>ФИО:</b> <i>${
-                  userSession.fio.length === 0
-                    ? `\nЯ только знаю как тебя зовут.\nДобавь свое ФИО <b>👤 Заполнить ФИО"</b>`
-                    : userSession.fio
-                }</i>\n` +
-                `● <b>Всего заказов сделано:</b> <i>${userSession.orders}</i>\n` +
-                `● <b>Бонусы:</b> <i>${userSession.bonuses}</i>\n` +
-                `● <b>Способ доставки:</b> <i>${
-                  userSession.locale.length === 0
-                    ? `\nТы мне не сказал куда я могу отправить тебе кроссовки.\nНажми <b>📦 Обновить адрес ПВЗ</b>`
-                    : userSession.locale
-                }</i>\n` +
-                `● <b>Email:</b> <i>${
-                  userSession.email.length === 0
-                    ? `Пока что ты не заполнил почту.\nНажми на --> <b>✉️ Заполнить email</b>, чтобы заполнить почту`
-                    : userSession.email
-                }</i>\n\n` +
-                `<i><b>P.S</b> Email, Адрес ПВЗ и ФИО нужны для формирования заказа</i>\n Так же заметь при заполнении адреса доставки по мск укажи это в скобках. Пример: <i>Москва, Генерала Кузнецова 21 к2, кв. 22</i>`,
-              {
-                chat_id: chatId,
-                message_id: msg.message.message_id,
-                parse_mode: "HTML",
-                reply_markup: JSON.stringify({
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "⏳ История заказов",
-                        callback_data: "data_orders",
-                      },
-                      {
-                        text: "📦 Обновить адрес",
-                        callback_data: "locale",
-                      },
-                    ],
-                    [
-                      {
-                        text:
-                          userSession.email.length === 0
-                            ? "✉️ Заполнить email"
-                            : "",
-                        callback_data: "email",
-                      },
-                    ],
-                    [
-                      {
-                        text:
-                          userSession.fio.length === 0
-                            ? "👤 Заполнить ФИО"
-                            : "",
-                        callback_data: "fio",
-                      },
-                    ],
-                    [
-                      {
-                        text: chat ? "📑 Админка" : "",
-                        callback_data: "admin",
-                      },
-                    ],
-                    [
-                      {
-                        text: "🏠 Выход в главное меню",
-                        callback_data: "exit",
-                      },
-                    ],
-                  ],
-                }),
-              }
-            );
-          }
+          await profile(
+            bot,
+            chatId,
+            userStorage,
+            msg.message.chat.first_name,
+            messageId
+          );
         }
         break;
 
@@ -580,17 +500,17 @@ module.exports = (bot) => {
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
 
         bot.deleteMessage(chatId, messageId);
-        await start(bot, chatId, msg.message.chat.first_name, userSessions);
+        await start(bot, chatId, msg.message.chat.first_name);
         break;
 
       case "exit":
-        // bot.deleteMessage(chatId, messageId
+        // bot.deleteMessage(chatId, messageId);
         await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
-
+          // await start(bot, chatId, msg.message.chat.first_name);
           await start_update(
             bot,
             chatId,
@@ -665,7 +585,7 @@ module.exports = (bot) => {
 
         console.log(selectedPhoto);
 
-        const profileData = await getProfile(chatId);
+        const profileData = await chatId;
         if (profileData.length > 0) {
           const profile = profileData[0];
           userSession = {
@@ -917,14 +837,12 @@ module.exports = (bot) => {
             await add_location(chatId, userStorage[chatId].address);
           }
           delete userStorage[chatId];
-
-          bot.sendMessage(
+          await profile(
+            bot,
             chatId,
-            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
-            {
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify(chatOptions_profile),
-            }
+            userStorage,
+            msg.chat.first_name,
+            messageId - 1
           );
           break;
 
@@ -935,14 +853,12 @@ module.exports = (bot) => {
             await add_email(chatId, userStorage[chatId].email);
           }
           delete userStorage[chatId];
-
-          bot.sendMessage(
+          await profile(
+            bot,
             chatId,
-            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
-            {
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify(chatOptions_profile),
-            }
+            userStorage,
+            msg.chat.first_name,
+            messageId - 1
           );
           break;
 
@@ -953,14 +869,12 @@ module.exports = (bot) => {
             await add_fio(chatId, userStorage[chatId].fio);
           }
           delete userStorage[chatId];
-
-          bot.sendMessage(
+          await profile(
+            bot,
             chatId,
-            `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел: ${userText}`,
-            {
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify(chatOptions_profile),
-            }
+            userStorage,
+            msg.chat.first_name,
+            messageId - 1
           );
           break;
 

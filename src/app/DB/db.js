@@ -527,7 +527,7 @@ async function add_location(chat_id, address) {
 
   try {
     await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
-      "доставка boxberry - " + address,
+      address,
       chat_id,
     ]);
     return true;
