@@ -521,23 +521,14 @@ module.exports = (bot) => {
         break;
 
       case "articul":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
-        bot.sendMessage(
-          chatId,
+        bot.editMessageCaption(
           `Yo <i><b>${msg.message.chat.first_name}</b></i>, введи артикул пары, которую ты хочешь найти:`,
           {
+            chat_id: chatId,
+            message_id: messageId,
             parse_mode: "HTML",
-            reply_markup: JSON.stringify({
-              inline_keyboard: [
-                [
-                  {
-                    text: "🏠 Выход в главное меню",
-                    callback_data: "exit",
-                  },
-                ],
-              ],
-            }),
           }
         );
 
@@ -843,10 +834,11 @@ module.exports = (bot) => {
           const buff = await search_articul(userText);
 
           if (buff === false) {
-            bot.sendMessage(
-              chatId,
+            await bot.editMessageCaption(
               `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
               {
+                chat_id: chatId,
+                message_id: messageId - 1,
                 parse_mode: "HTML",
                 reply_markup: JSON.stringify(keyboard),
               }
@@ -861,32 +853,40 @@ module.exports = (bot) => {
               )}`
             );
 
-            bot.sendPhoto(chatId, selectedPhoto[0].path, {
-              caption:
-                `👟 <b>Кроссовки <i>${selectedPhoto[0].name}</i></b>\n\n` +
-                `🧵 <b>Характеристики:</b>\n\n` +
-                `➖ <b>Цвет:</b> <i>${selectedPhoto[0].color}</i>\n` +
-                `➖ <b>Материал:</b> <i>${selectedPhoto[0].material}</i>\n` +
-                `➖ <b>Размер:</b> <i>${selectedPhoto[0].size} us</i>\n\n` +
-                `💸 <b>Цена:</b> <code>${selectedPhoto[0].price}₽</code>\n\n`,
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify({
-                inline_keyboard: [
-                  [
-                    {
-                      text: "🛒 Заказать",
-                      callback_data: "order",
-                    },
+            bot.editMessageMedia(
+              {
+                type: "photo",
+                media: selectedPhoto[0].path,
+                caption:
+                  `👟 <b>Кроссовки <i>${selectedPhoto[0].name}</i></b>\n\n` +
+                  `🧵 <b>Характеристики:</b>\n\n` +
+                  `➖ <b>Цвет:</b> <i>${selectedPhoto[0].color}</i>\n` +
+                  `➖ <b>Материал:</b> <i>${selectedPhoto[0].material}</i>\n` +
+                  `➖ <b>Размер:</b> <i>${selectedPhoto[0].size} us</i>\n\n` +
+                  `💸 <b>Цена:</b> <code>${selectedPhoto[0].price}₽</code>\n\n`,
+                parse_mode: "HTML",
+              },
+              {
+                chat_id: chatId,
+                message_id: messageId - 1,
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "🛒 Заказать",
+                        callback_data: "order",
+                      },
+                    ],
+                    [
+                      {
+                        text: "🏠 Выход в главное меню",
+                        callback_data: "home",
+                      },
+                    ],
                   ],
-                  [
-                    {
-                      text: "🏠 Выход в главное меню",
-                      callback_data: "exit",
-                    },
-                  ],
-                ],
-              }),
-            });
+                }),
+              }
+            );
           }
           break;
 
