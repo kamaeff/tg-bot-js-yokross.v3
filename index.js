@@ -9,7 +9,6 @@ const bot = new TelegramApi(process.env.TOKEN, { polling: true });
 
 const main = async () => {
   testDatabaseConnection();
-
   console.log("Bot create by Anton Kamaev");
 
   bot.setMyCommands([

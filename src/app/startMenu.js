@@ -35,7 +35,13 @@ const {
 } = require("./DB/db");
 
 const { sendPhotoWithNavigation } = require("./func/carusel");
-const { start, tech, start_admin, check_folow } = require("./func/main-func");
+const {
+  start,
+  tech,
+  start_admin,
+  check_folow,
+  start_update,
+} = require("./func/main-func");
 
 const { admins } = require("./func/admin");
 const { gender_choose } = require("./func/gender");
@@ -92,7 +98,7 @@ module.exports = (bot) => {
     check = await check_folow(YokrossId, chatId, bot, msg.chat.username);
     console.log(check);
     if (check === true) {
-      bot.deleteMessage(chatId, messageId);
+      // bot.deleteMessage(chatId, messageId);
       await start(bot, chatId, msg.chat.first_name, userSessions);
       const res = await add_user(chatId, msg.chat.username);
       logger.info(`User ${username} was auth. Database: ${res}`);
@@ -574,18 +580,23 @@ module.exports = (bot) => {
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
 
         bot.deleteMessage(chatId, messageId);
+        await start(bot, chatId, msg.message.chat.first_name, userSessions);
         break;
 
       case "exit":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId
         await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
-          bot.deleteMessage(chatId, messageId);
 
-          await start(bot, chatId, msg.message.chat.first_name, userSessions);
+          await start_update(
+            bot,
+            chatId,
+            msg.message.chat.first_name,
+            messageId
+          );
         }
         break;
 
@@ -633,51 +644,18 @@ module.exports = (bot) => {
         break;
 
       case "next_photo":
-        bot.deleteMessage(chatId, messageId);
+        //bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await next_photo(bot, chatId, userStorage);
+        await next_photo(bot, chatId, userStorage, messageId);
         break;
 
       case "prev_photo":
-        bot.deleteMessage(chatId, messageId);
+        //bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await prev_photo(bot, chatId, userStorage);
+        await prev_photo(bot, chatId, userStorage, messageId);
         break;
-
-      // case "order_msk":
-      //   bot.deleteMessage(chatId, messageId);
-
-      //   bot.sendMessage(
-      //     chatId,
-      //     `Yo <i><b>${msg.message.chat.first_name}</b></i>, доставка по Москве возможна нашим курьером. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.\n\n` +
-      //       `<i>На какой адрес курьеру доставить твой кроссовки: </i>`,
-      //     {
-      //       parse_mode: "HTML",
-      //       reply_markup: JSON.stringify({
-      //         inline_keyboard: [
-      //           [
-      //             {
-      //               text: "🧨 Отмена",
-      //               callback_data: "cancel",
-      //             },
-      //           ],
-      //         ],
-      //       }),
-      //     }
-      //   );
-
-      //   console.log(
-      //     userStorage[chatId].photo[userStorage[chatId].currentIndex]
-      //   );
-
-      //   userStorage[chatId] = {
-      //     state: "_msk",
-      //     photo: userStorage[chatId].photo[userStorage[chatId].currentIndex],
-      //     currentIndex: userStorage[chatId].currentIndex,
-      //   };
-      //   break;
 
       case "order":
         bot.deleteMessage(chatId, messageId);
@@ -717,7 +695,7 @@ module.exports = (bot) => {
               userSession.fio
             );
 
-            //logger.info(`Add to DB: ${objectToString(addting)}`);
+            logger.info(`Add to DB: ${objectToString(addting)}`);
             bot.sendPhoto(chatId, selectedPhoto.path, {
               caption:
                 `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
@@ -808,12 +786,11 @@ module.exports = (bot) => {
         // tech(bot, chatId, msg.message.chat.username);
 
         if (userSession && userSession.photos) {
+          ы;
           selectedPhoto = userSession.photos[userSession.currentIndex];
         } else {
           console.error("userSession or photos is undefined or null.");
         }
-
-        // todo payment check and confirm order
 
         const res = await check_payment(chatId);
         console.log(res);
@@ -933,47 +910,6 @@ module.exports = (bot) => {
           }
           break;
 
-        // case "_msk":
-        //   userStorage[chatId].msk = userText;
-
-        //   if (userStorage[chatId].msk.length > 0) {
-        //     const add = await add_msk(chatId, userStorage[chatId].msk);
-
-        //     if (add === true) {
-        //       console.log(`in msk: `, userStorage[chatId].photo);
-
-        //       userStorage[chatId] = {
-        //         photo: userStorage[chatId].photo,
-        //         currentIndex: userStorage[chatId].currentIndex,
-        //       };
-
-        //       console.log(`in msk: `, userStorage[chatId]);
-
-        //       bot.sendMessage(
-        //         chatId,
-        //         `Yo <i><b>${msg.chat.first_name}</b></i>, ты ввел ${userText}\n\n` +
-        //           `Для подтверждения нажмите <b>✅ Подтвердить</b>`,
-        //         {
-        //           parse_mode: "HTML",
-        //           reply_markup: JSON.stringify({
-        //             inline_keyboard: [
-        //               [{ text: "✅ Подтвердить", callback_data: "order" }],
-        //               [
-        //                 {
-        //                   text: "🏠 Выход в главное меню",
-        //                   callback_data: "exit",
-        //                 },
-        //               ],
-        //             ],
-        //           }),
-        //         }
-        //       );
-        //     }
-        //   } else {
-        //     console.log("error");
-        //   }
-        //   break;
-
         case "awaitingAddress":
           userStorage[chatId].address = userText;
 
@@ -1065,24 +1001,21 @@ module.exports = (bot) => {
               userSession.gender
             );
 
-            if (userSession) {
-              userSession = {
-                photos: res,
-                currentIndex: 0,
-              };
-              userSessions.set(chatId, userSession);
-            }
+            userStorage[chatId] = {
+              photo: res,
+              currentIndex: 0,
+            };
 
-            if (userSession.photos.length > 0) {
-              const currentIndex = userSession.currentIndex;
-              const firstPhoto = userSession.photos[currentIndex];
-              const totalPhotos = userSession.photos.length;
+            if (userStorage[chatId].photo.length > 0) {
+              const currentIndex = userStorage[chatId].currentIndex;
+              const firstPhoto = userStorage[chatId].photo[currentIndex];
+              const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
               await sendPhotoWithNavigation(
                 bot,
                 chatId,
-                userSession,
+                userStorage[chatId],
                 currentIndex,
                 firstPhoto,
                 totalPhotos,

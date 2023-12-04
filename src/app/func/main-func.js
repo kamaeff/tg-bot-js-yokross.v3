@@ -30,6 +30,36 @@ async function start(bot, chatId, username, userSessions) {
   });
 }
 
+async function start_update(bot, chatId, username, messageid) {
+  await bot.editMessageCaption(
+    `<b>✌🏻 Yo ${username}! Я бот группы <i><b><a href="https://t.me/stockhub12">StockHub!</a></b></i></b>\n\n` +
+      `⚙️ <b>Кнопки основного меню:</b>\n\n` +
+      `➖ <b>Поиск пары</b> - <i>Фильтр поиска пары</i>\n` +
+      `➖ <b>ShowRoom</b> - <i>Коллекция магазина</i>\n` +
+      `➖ <b>Мой профиль</b> - <i>Инфа о твоем профиле</i>\n` +
+      `➖ <b>Обратная связь</b> - <i>help@stockhub12.ru</i>\n\n` +
+      `<b><i>💬 Полезное:</i></b> \n` +
+      `<i><b><a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27">➖ Договор оферты</a></b></i>\n` +
+      `➖ /commands <i>(Дополнительные команды)</i>\n\n` +
+      `<i><b>Created by: </b><b><a href="https://t.me/YoKrossbot_log">Anton Kamaev</a></b>.\n<b>Alfa-version.v3</b></i>`,
+    {
+      chat_id: chatId,
+      message_id: messageid,
+      parse_mode: "HTML",
+      reply_markup: JSON.stringify({
+        inline_keyboard: [
+          [
+            { text: "🔎 Поиск пары", callback_data: "choose" },
+            { text: "⚡️ ShowRoom", callback_data: "show" },
+          ],
+          [{ text: "📝 Поиск по артиклу", callback_data: "articul" }],
+          [{ text: "✌🏻 Мой профиль", callback_data: "profile" }],
+        ],
+      }),
+    }
+  );
+}
+
 async function start_admin(bot, chatId) {
   await bot.sendMessage(
     chatId,
@@ -108,4 +138,5 @@ module.exports = {
   tech,
   start_admin,
   check_folow,
+  start_update,
 };

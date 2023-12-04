@@ -1,9 +1,7 @@
 const { keyboard } = require("./btns");
-const { sendPhotoWithNavigation } = require("./carusel");
+const { editCaptionShow } = require("./carusel");
 
-async function showmenu(photosWithDescriptions, bot, chatId, userStorage) {}
-
-async function next_photo(bot, chatId, userStorage) {
+async function next_photo(bot, chatId, userStorage, messageid) {
   if (userStorage[chatId] && userStorage[chatId].photo.length > 0) {
     const currentIndex = userStorage[chatId].currentIndex;
     const nextIndex = currentIndex + 1;
@@ -12,10 +10,11 @@ async function next_photo(bot, chatId, userStorage) {
       const nextPhoto = userStorage[chatId].photo[nextIndex];
       const totalPhotos = userStorage[chatId].photo.length;
 
-      await sendPhotoWithNavigation(
+      await editCaptionShow(
         bot,
         chatId,
         userStorage,
+        messageid,
         nextIndex,
         nextPhoto,
         totalPhotos,
@@ -27,7 +26,7 @@ async function next_photo(bot, chatId, userStorage) {
   }
 }
 
-async function prev_photo(bot, chatId, userStorage) {
+async function prev_photo(bot, chatId, userStorage, message_id) {
   if (userStorage && userStorage[chatId].photo.length > 0) {
     const currentIndex = userStorage[chatId].currentIndex;
     const prevIndex = currentIndex - 1;
@@ -37,10 +36,11 @@ async function prev_photo(bot, chatId, userStorage) {
       const totalPhotos = userStorage[chatId].photo.length;
       const showPrevButton = prevIndex > 0;
 
-      await sendPhotoWithNavigation(
+      await editCaptionShow(
         bot,
         chatId,
         userStorage,
+        message_id,
         prevIndex,
         prevPhoto,
         totalPhotos,
@@ -52,7 +52,6 @@ async function prev_photo(bot, chatId, userStorage) {
 }
 
 module.exports = {
-  showmenu,
   next_photo,
   prev_photo,
 };

@@ -332,7 +332,7 @@ async function get_gender(name_shooes, size, style, gender) {
   const connection = await createConnection();
   try {
     const [res] = await connection.execute(
-      "SELECT photo_path, material,price,name,size,color,gender_option, style FROM Updates WHERE gender_option = ? AND size = ? AND style = ? AND name_shooes = ?",
+      "SELECT photo_path, material,price,name,size,color,gender_option, style, artilul FROM Updates WHERE gender_option = ? AND size = ? AND style = ? AND name_shooes = ?",
       [gender, size, style, name_shooes]
     );
     const resault = res.map((row) => ({
@@ -344,6 +344,7 @@ async function get_gender(name_shooes, size, style, gender) {
       color: row.color,
       gender: row.gender_option,
       style: row.style,
+      articul: row.artilul,
     }));
     if (resault == []) {
       return false;
