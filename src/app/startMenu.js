@@ -105,13 +105,8 @@ module.exports = (bot) => {
     }
   });
 
-  bot.onText(/\/time/, async (msg) => {
-    let c = await check_order_status();
-
-    bot.sendMessage(msg.chat.id, `msg ${c}`);
-  });
-
   bot.onText(/\/guide/, async (msg) => {
+    bot.deleteMessage(chatId, msg.message_id - 1);
     bot.sendMessage(
       msg.chat.id,
       `<b>Ссылка на гайд:</b> \n<i><a href="https://t.me/yokrossguide12/5">Guide</a></i>`,
@@ -120,6 +115,7 @@ module.exports = (bot) => {
   });
 
   bot.onText(/\/commands/, async (msg) => {
+    bot.deleteMessage(chatId, msg.message_id - 1);
     await bot.sendMessage(
       msg.chat.id,
       `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
@@ -145,6 +141,7 @@ module.exports = (bot) => {
   });
 
   bot.onText(/\/donate/, async (msg) => {
+    bot.deleteMessage(chatId, msg.message_id - 1);
     bot.sendMessage(
       msg.chat.id,
       `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
