@@ -13,8 +13,6 @@ const {
   add_user,
   send_photo,
   send_dynamic_add_photo,
-  select_photo,
-  getProfile,
   createPDF,
   delOrder,
   add_gender,
@@ -32,9 +30,10 @@ const {
   check_payment,
   search_articul,
   add_msk,
+  getProfile,
 } = require("./DB/db");
 
-const { sendPhotoWithNavigation } = require("./func/carusel");
+const { editCaptionShow } = require("./func/carusel");
 const {
   start,
   tech,
@@ -99,7 +98,7 @@ module.exports = (bot) => {
     check = await check_folow(YokrossId, chatId, bot, msg.chat.username);
     console.log(check);
     if (check === true) {
-      // bot.deleteMessage(chatId, messageId);
+      bot.deleteMessage(chatId, messageId - 1);
       await start(bot, chatId, msg.chat.first_name);
       const res = await add_user(chatId, msg.chat.username);
       logger.info(`User ${username} was auth. Database: ${res}`);
@@ -199,8 +198,7 @@ module.exports = (bot) => {
         bot.editMessageCaption(
           `✌🏼 Yo ${msg.message.chat.first_name}, отправь мне пожалуйста адрес, который ближе к тебе или адресс ПВЗ Boxberry.\n\n` +
             `<i>P.S Если не знаешь где находятся <i><b>ПВЗ Boxberry</b></i>, то можешь посмотреть на карте</i>\n\n` +
-            `<i>Пример ввода для доставки по МСК: Москва, Генерала Кузнецова 21 к2, кв. 22</i>\n` +
-            `<i>Пример ввода для доставки по России: Йошкар-Ола, Йывана Кырли 44</i>`,
+            `<i>Пример ввода для доставки по России: Йошкар-Ола, Йывана Кырли 44</i>\n\n`,
           {
             chat_id: chatId,
             message_id: messageId,
@@ -276,25 +274,32 @@ module.exports = (bot) => {
         break;
 
       case "cancel":
-        bot.deleteMessage(chatId, messageId);
-        start(bot, chatId, user_callBack);
+        // bot.deleteMessage(chatId, messageId);
+        await profile(
+          bot,
+          chatId,
+          userStorage,
+          msg.message.chat.first_name,
+          messageId
+        );
         break;
 
       case "choose":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
-          bot.sendMessage(
-            chatId,
+          bot.editMessageCaption(
             `✌🏼 Yo <i><b>${msg.message.chat.first_name}</b></i>, давай выберем тип кроссовок, которые ты хочешь найти`,
             {
+              chat_id: chatId,
+              message_id: messageId,
               parse_mode: "HTML",
               reply_markup: JSON.stringify({
                 inline_keyboard: [
                   [{ text: "👟 Лайфстайл", callback_data: "lifestyle" }],
                   [{ text: "🏀 Баскетбольные", callback_data: "basket" }],
                   [{ text: "⚽️ Футбольные", callback_data: "football" }],
-                  [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
+                  [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
                 ],
               }),
             }
@@ -303,61 +308,81 @@ module.exports = (bot) => {
         }
 
       case "lifestyle":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         await add_style(chatId, "lifestyle");
-        await gender_choose(bot, msg, chatId);
+        await gender_choose(bot, msg, chatId, messageId);
 
         logger.info(`${msg.message.chat.first_name} choose brand lifestyle`);
         break;
 
       case "basket":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         await add_style(chatId, "basket");
-        await gender_choose(bot, msg, chatId);
+        await gender_choose(bot, msg, chatId, messageId);
 
         logger.info(`${msg.message.chat.first_name} choose brand basketball`);
         break;
 
       case "football":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         await add_style(chatId, "football");
-        await gender_choose(bot, msg, chatId);
+        await gender_choose(bot, msg, chatId, messageId);
 
         logger.info(`${msg.message.chat.first_name} choose brand football`);
         break;
 
       case "man":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         await add_gender(chatId, "man");
         const model_m = await check_style(chatId);
-        await bot.sendPhoto(chatId, "./src/app/img/man_choice.jpg", {
-          caption: "",
-          reply_markup: JSON.stringify(model_m),
-        });
+        await bot.editMessageMedia(
+          { type: "photo", media: await send_photo("man"), caption: "" },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+            reply_markup: JSON.stringify(model_m),
+          }
+        );
         break;
 
       case "woman":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         await add_gender(chatId, "woman");
         const model_w = await check_style(chatId);
-        await bot.sendPhoto(chatId, "./src/app/img/female_choice.jpg", {
-          caption: "",
-          reply_markup: JSON.stringify(model_w),
-        });
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo("woman"),
+            caption: "",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+            reply_markup: JSON.stringify(model_w),
+          }
+        );
         break;
 
       case "Nike":
         logger.info(`${msg.message.chat.first_name} choose Nike`);
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
 
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
@@ -365,11 +390,19 @@ module.exports = (bot) => {
       case "Adidas":
         logger.info(`${msg.message.chat.first_name} choose Adidas`);
 
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
 
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
@@ -377,48 +410,76 @@ module.exports = (bot) => {
       case "Reebok":
         logger.info(`${msg.message.chat.first_name} choose Reebok`);
 
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
-
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Puma":
         logger.info(`${msg.message.chat.first_name} choose Puma`);
 
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
-
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "Jordan":
         logger.info(`${msg.message.chat.first_name} choose Jordan`);
 
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
-
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
       case "NewBalance":
         logger.info(`${msg.message.chat.first_name} choose NewBalance`);
 
-        bot.deleteMessage(chatId, messageId);
-        await bot.sendPhoto(chatId, await send_photo(`${data}_size`), {
-          caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
-          parse_mode: "HTML",
-        });
-
+        // bot.deleteMessage(chatId, messageId);
+        await bot.editMessageMedia(
+          {
+            type: "photo",
+            media: await send_photo(`${data}_size`),
+            caption: `👟 Доступные размеры <b>${data}</b>\n\n ❗️ Напиши в чат размер и я выведу тебе все доступные варианты в магазине.\n\n💬 <i>Пример: 8 или 8.5</i>`,
+            parse_mode: "HTML",
+          },
+          {
+            chat_id: chatId,
+            message_id: messageId,
+          }
+        );
         userStorage[chatId] = { state: "brandChoice", data: data };
         break;
 
@@ -438,15 +499,16 @@ module.exports = (bot) => {
         break;
 
       case "data_orders":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         const orders = await past_orders(chatId);
         console.log(orders);
         if (orders === false) {
-          bot.sendMessage(
-            chatId,
+          bot.editMessageCaption(
             `✌🏼 Yo ${msg.message.chat.first_name}, ты еще не сделал ни одного заказа!\n\n` +
               `Ты можешь выбрать кроссовки в <i><b>⚡️ Show Room</b></i> или найти пару по фильтру <i><b>🔎 Поиск пары</b></i>`,
             {
+              chat_id: chatId,
+              message_id: messageId,
               parse_mode: "HTML",
               reply_markup: JSON.stringify(chatOptions_profile),
             }
@@ -499,8 +561,8 @@ module.exports = (bot) => {
         await add_user(chatId, msg.message.chat.username);
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
 
-        bot.deleteMessage(chatId, messageId);
-        await start(bot, chatId, msg.message.chat.first_name);
+        bot.deleteMessage(chatId, messageId + 1);
+        await start_update(bot, chatId, msg.message.chat.first_name, messageId);
         break;
 
       case "exit":
@@ -521,7 +583,7 @@ module.exports = (bot) => {
         break;
 
       case "show":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
@@ -549,10 +611,11 @@ module.exports = (bot) => {
               const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
-              await sendPhotoWithNavigation(
+              await editCaptionShow(
                 bot,
                 chatId,
                 userSession,
+                messageId,
                 currentIndex,
                 firstPhoto,
                 totalPhotos,
@@ -578,14 +641,13 @@ module.exports = (bot) => {
         break;
 
       case "order":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         selectedPhoto =
           userStorage[chatId].photo[userStorage[chatId].currentIndex];
 
-        console.log(selectedPhoto);
-
-        const profileData = await chatId;
+        const profileData = await getProfile(chatId);
+        console.log(profileData);
         if (profileData.length > 0) {
           const profile = profileData[0];
           userSession = {
@@ -597,6 +659,7 @@ module.exports = (bot) => {
             email: profile.email,
             fio: profile.fio,
           };
+          console.log(profile);
           logger.info(objectToString(profile));
           userStorage[chatId] = { order_id: userSession.order_id };
 
@@ -616,45 +679,48 @@ module.exports = (bot) => {
             );
 
             logger.info(`Add to DB: ${objectToString(addting)}`);
-            bot.sendPhoto(chatId, selectedPhoto.path, {
-              caption:
-                `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
+            bot.editMessageCaption(
+              `Yo ${msg.message.chat.first_name} проверь свои данные!\n\n` +
                 `✌🏼 <b>Получатель: </b><i>${userSession.fio}</i>\n` +
                 `🚚 <b>ПВЗ Boxberry: </b><i>${userSession.locale}</i>\n` +
-                `✉️ я<b>Email для отправки чека: </b><i>${userSession.email}</i>\n\n` +
+                `✉️ <b>Email для отправки чека: </b><i>${userSession.email}</i>\n\n` +
                 `👟 <b>Кроссовки <i>${selectedPhoto.name}</i></b>\n\n` +
                 `🧵 <b>Характеристики:</b>\n\n` +
                 `➖ <b>Цвет:</b> <i>${selectedPhoto.color}</i>\n` +
                 `➖ <b>Материал:</b> <i>${selectedPhoto.material}</i>\n` +
                 `➖ <b>Размер:</b> <i>${selectedPhoto.size} us</i>\n\n` +
                 `💸 <b>Цена:</b> <code>${selectedPhoto.price}₽</code>\n\n` +
-                `Yo <i>${msg.message.chat.first_name}</i>, перед тем как оплатить прочитай <i><b>📑 Договор оферты</b></i>\n` +
-                `Yo <i>Доставка по Москве возможна нашим курьром. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.</i>`,
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify({
-                inline_keyboard: [
-                  [
-                    {
-                      text: "📑 Договор оферты",
-                      url: "https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27",
-                    },
+                `Yo <i>${msg.message.chat.first_name}</i>, перед тем как оплатить прочитай <i><b>📑 Договор оферты</b></i>\n`,
+
+              {
+                parse_mode: "HTML",
+                chat_id: chatId,
+                message_id: messageId,
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "📑 Договор оферты",
+                        url: "https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27",
+                      },
+                    ],
+                    [
+                      {
+                        text: `💸 Оплатить заказ #${userSession.order_id}`,
+                        url: `https://stockhub12.ru/payanyway.php?orderId=${userSession.order_id}`,
+                      },
+                    ],
+                    [
+                      { text: "✅ Я оплатил", callback_data: "payment" },
+                      {
+                        text: "🧨 Отменить заказ",
+                        callback_data: "cancel_order",
+                      },
+                    ],
                   ],
-                  [
-                    {
-                      text: `💸 Оплатить заказ #${userSession.order_id}`,
-                      url: `https://stockhub12.ru/payanyway.php?orderId=${userSession.order_id}`,
-                    },
-                  ],
-                  [
-                    { text: "✅ Я оплатил", callback_data: "payment" },
-                    {
-                      text: "🧨 Отменить заказ",
-                      callback_data: "cancel_order",
-                    },
-                  ],
-                ],
-              }),
-            });
+                }),
+              }
+            );
           } else {
             bot.sendMessage(
               chatId,
@@ -680,18 +746,11 @@ module.exports = (bot) => {
         break;
 
       case "cancel_order":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
 
         const cancelOrder = await delOrder(userStorage[chatId].order_id);
         if (cancelOrder === true) {
-          bot.sendMessage(
-            chatId,
-            `Yo <b><i>${msg.message.chat.first_name}</i></b>, заказа отменен.`,
-            {
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify(keyboard),
-            }
-          );
+          await start_update(bot, chatId, user_callBack, messageId);
           logger.info(
             objectToString(
               `Cancel order by ${msg.message.chat.username}: Order_id ${userStorage[chatId].order_id} - ${cancelOrder}`
@@ -926,10 +985,11 @@ module.exports = (bot) => {
               const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
-              await sendPhotoWithNavigation(
+              await editCaptionShow(
                 bot,
                 chatId,
                 userStorage[chatId],
+                messageId - 1,
                 currentIndex,
                 firstPhoto,
                 totalPhotos,

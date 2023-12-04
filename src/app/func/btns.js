@@ -88,7 +88,7 @@ async function check_style(chat_id) {
           { text: "NewBalance", callback_data: "NewBalance" },
           { text: "Jordan", callback_data: "Jordan" },
         ],
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+        [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
       ],
     };
     return lifestyle_model;
@@ -103,7 +103,7 @@ async function check_style(chat_id) {
           { text: "Puma", callback_data: "Puma" },
           { text: "Jordan", callback_data: "Jordan" },
         ],
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+        [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
       ],
     };
     return basket_model;
