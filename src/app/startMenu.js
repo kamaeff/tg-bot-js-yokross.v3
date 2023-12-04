@@ -99,6 +99,7 @@ module.exports = (bot) => {
     console.log(check);
     if (check === true) {
       bot.deleteMessage(chatId, messageId - 1);
+      bot.deleteMessage(chatId, messageId - 2);
       await start(bot, chatId, msg.chat.first_name);
       const res = await add_user(chatId, msg.chat.username);
       logger.info(`User ${username} was auth. Database: ${res}`);
@@ -106,7 +107,8 @@ module.exports = (bot) => {
   });
 
   bot.onText(/\/guide/, async (msg) => {
-    bot.deleteMessage(chatId, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 2);
     bot.sendMessage(
       msg.chat.id,
       `<b>Ссылка на гайд:</b> \n<i><a href="https://t.me/yokrossguide12/5">Guide</a></i>`,
@@ -115,7 +117,8 @@ module.exports = (bot) => {
   });
 
   bot.onText(/\/commands/, async (msg) => {
-    bot.deleteMessage(chatId, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 2);
     await bot.sendMessage(
       msg.chat.id,
       `<b>⚙️ ${msg.chat.username}</b> вот пару команд:\n\n` +
@@ -141,7 +144,8 @@ module.exports = (bot) => {
   });
 
   bot.onText(/\/donate/, async (msg) => {
-    bot.deleteMessage(chatId, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 1);
+    bot.deleteMessage(msg.chat.id, msg.message_id - 2);
     bot.sendMessage(
       msg.chat.id,
       `✌🏻 Yo <b>${msg.chat.first_name}</b>, ты можешь помочь развитию проекта задонатив любую сумму!\n\n` +
