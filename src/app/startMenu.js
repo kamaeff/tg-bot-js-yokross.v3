@@ -1080,6 +1080,7 @@ module.exports = (bot) => {
               }
             );
           }
+          delete userStorage[chatId];
           break;
       }
     }
