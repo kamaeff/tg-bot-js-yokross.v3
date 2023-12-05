@@ -803,7 +803,6 @@ module.exports = (bot) => {
         // tech(bot, chatId, msg.message.chat.username);
 
         if (userSession && userSession.photos) {
-          ы;
           selectedPhoto = userSession.photos[userSession.currentIndex];
         } else {
           console.error("userSession or photos is undefined or null.");
@@ -813,6 +812,8 @@ module.exports = (bot) => {
         console.log(res);
 
         if (res == false) {
+          bot.deleteMessage(chatId, messageId);
+          await delOrder(userStorage[chatId].order_id);
           bot.sendMessage(
             chatId,
             `<i><b>Yo ${msg.message.chat.first_name}</b></i>, кажется ты не оплачивал заказ ${userStorage[chatId].order_id}.`,
@@ -823,7 +824,7 @@ module.exports = (bot) => {
                   [
                     {
                       text: "🏠 Выход в главное меню",
-                      callback_data: "exit",
+                      callback_data: "end",
                     },
                   ],
                 ],
@@ -831,13 +832,23 @@ module.exports = (bot) => {
             }
           );
         } else {
+          bot.deleteMessage(chatId, messageId);
           bot.sendMessage(
             chatId,
             `🤑 Yo <b><i>${msg.message.chat.first_name}</i></b>, оплата прошла успешно. В скором времени тебе отправится чек на почту!\n` +
               `Так же в скором времени у тебя в профиле появится трек номер для отслеживания твоей посылки.\n\n`,
             {
               parse_mode: "HTML",
-              reply_markup: JSON.stringify(keyboard),
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "🏠 Выход в главное меню",
+                      callback_data: "end",
+                    },
+                  ],
+                ],
+              }),
             }
           );
 
