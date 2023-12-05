@@ -184,21 +184,22 @@ async function tech(bot, chatId, username) {
   });
 }
 
-async function check_folow(YokrossId, chatId, bot, username) {
+async function check_folow(YokrossId, chatId, bot, username, messageid) {
   console.log(YokrossId, chatId, username);
   try {
     const chatMember = await bot.getChatMember(YokrossId, chatId);
     console.log(chatMember);
     await add_user(chatId, username);
-
-    if (
+    const check_data =
       chatMember &&
       (chatMember.status === "member" ||
         chatMember.status === "creator" ||
-        chatMember.status === "administrator")
-    ) {
+        chatMember.status === "administrator");
+
+    if (check_data) {
       return true;
     } else {
+      await bot.deleteMessage(chatId, messageid);
       await bot.sendPhoto(chatId, await send_photo("logo"), {
         caption:
           `✌🏼 Yo <i><b>${username}</b></i>, я помогу подобрать тебе кроссовки, чтобы воспользоваться моими функциями, подпишись на нашу группу <b><i><a href='https://t.me/stockhub12'>StockHub</a></i></b> !` +
@@ -217,7 +218,7 @@ async function check_folow(YokrossId, chatId, bot, username) {
             [
               {
                 text: "✅ Я прочитал и подписался",
-                callback_data: "exit",
+                callback_data: "end",
               },
             ],
           ],

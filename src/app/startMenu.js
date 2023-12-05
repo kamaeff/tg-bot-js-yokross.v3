@@ -95,7 +95,13 @@ module.exports = (bot) => {
     const username = msg.chat.username;
     const messageId = msg.message_id;
 
-    check = await check_folow(YokrossId, chatId, bot, msg.chat.username);
+    check = await check_folow(
+      YokrossId,
+      chatId,
+      bot,
+      msg.chat.username,
+      messageId
+    );
     console.log(check);
     if (check === true) {
       bot.deleteMessage(chatId, messageId - 1);
@@ -287,7 +293,13 @@ module.exports = (bot) => {
 
       case "choose":
         // bot.deleteMessage(chatId, messageId);
-        check = await check_folow(YokrossId, chatId, bot, user_callBack);
+        check = await check_folow(
+          YokrossId,
+          chatId,
+          bot,
+          user_callBack,
+          messageId
+        );
         if (check === true) {
           bot.editMessageCaption(
             `✌🏼 Yo <i><b>${msg.message.chat.first_name}</b></i>, давай выберем тип кроссовок, которые ты хочешь найти`,
@@ -486,7 +498,13 @@ module.exports = (bot) => {
 
       case "profile":
         // bot.deleteMessage(chatId, messageId);
-        check = await check_folow(YokrossId, chatId, bot, user_callBack);
+        check = await check_folow(
+          YokrossId,
+          chatId,
+          bot,
+          user_callBack,
+          messageId
+        );
 
         if (check === true) {
           await profile(
@@ -550,8 +568,18 @@ module.exports = (bot) => {
         break;
 
       case "end":
-        bot.deleteMessage(chatId, messageId);
-        await start(bot, chatId, msg.message.chat.first_name);
+        check = await check_folow(
+          YokrossId,
+          chatId,
+          bot,
+          user_callBack,
+          messageId
+        );
+        if (check === true) {
+          bot.deleteMessage(chatId, messageId);
+          await start(bot, chatId, msg.message.chat.first_name);
+        }
+
         break;
 
       case "home":
@@ -566,7 +594,13 @@ module.exports = (bot) => {
         // bot.deleteMessage(chatId, messageId + 1);
         await add_user(chatId, msg.message.chat.username);
 
-        check = await check_folow(YokrossId, chatId, bot, user_callBack);
+        check = await check_folow(
+          YokrossId,
+          chatId,
+          bot,
+          user_callBack,
+          messageId
+        );
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
           // await start(bot, chatId, msg.message.chat.first_name);
@@ -581,7 +615,13 @@ module.exports = (bot) => {
 
       case "show":
         // bot.deleteMessage(chatId, messageId);
-        check = await check_folow(YokrossId, chatId, bot, user_callBack);
+        check = await check_folow(
+          YokrossId,
+          chatId,
+          bot,
+          user_callBack,
+          messageId
+        );
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
           userSession = userSessions.get(chatId);
@@ -608,6 +648,7 @@ module.exports = (bot) => {
               const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
+              console.log(messageId);
               await editCaptionShow(
                 bot,
                 chatId,
