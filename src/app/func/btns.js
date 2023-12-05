@@ -2,7 +2,7 @@ const { get_userStyle } = require("../DB/db");
 
 const keyboard = {
   inline_keyboard: [
-    [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
+    [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
   ],
 };
 

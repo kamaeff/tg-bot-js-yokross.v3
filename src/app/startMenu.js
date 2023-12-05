@@ -549,16 +549,21 @@ module.exports = (bot) => {
         await prev_photo_o(bot, chatId, userStorage);
         break;
 
+      case "end":
+        bot.deleteMessage(chatId, messageId);
+        await start(bot, chatId, msg.message.chat.first_name);
+        break;
+
       case "home":
         await add_user(chatId, msg.message.chat.username);
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
 
-        bot.deleteMessage(chatId, messageId + 1);
+        bot.deleteMessage(chatId, messageId);
         await start_update(bot, chatId, msg.message.chat.first_name, messageId);
         break;
 
       case "exit":
-        // bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId + 1);
         await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(YokrossId, chatId, bot, user_callBack);
@@ -834,15 +839,21 @@ module.exports = (bot) => {
           const buff = await search_articul(userText);
 
           if (buff === false) {
-            await bot.editMessageCaption(
-              `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
-              {
-                chat_id: chatId,
-                message_id: messageId - 1,
-                parse_mode: "HTML",
-                reply_markup: JSON.stringify(keyboard),
-              }
-            );
+            await bot.deleteMessage(chatId, messageId - 1);
+            await bot.sendPhoto(chatId, await send_photo("logo"), {
+              caption: `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
+              parse_mode: "HTML",
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "🏠 Выход в главное меню",
+                      callback_data: "exit",
+                    },
+                  ],
+                ],
+              }),
+            });
           } else {
             userStorage[chatId] = { photo: buff, currentIndex: 0 };
             selectedPhoto = userStorage[chatId].photo;
@@ -852,41 +863,34 @@ module.exports = (bot) => {
                 selectedPhoto
               )}`
             );
+            await bot.deleteMessage(chatId, messageId - 1);
+            await bot.sendPhoto(chatId, selectedPhoto[0].path, {
+              caption:
+                `👟 <b>Кроссовки <i>${selectedPhoto[0].name}</i></b>\n\n` +
+                `🧵 <b>Характеристики:</b>\n\n` +
+                `➖ <b>Цвет:</b> <i>${selectedPhoto[0].color}</i>\n` +
+                `➖ <b>Материал:</b> <i>${selectedPhoto[0].material}</i>\n` +
+                `➖ <b>Размер:</b> <i>${selectedPhoto[0].size} us</i>\n\n` +
+                `💸 <b>Цена:</b> <code>${selectedPhoto[0].price}₽</code>\n\n`,
+              parse_mode: "HTML",
 
-            bot.editMessageMedia(
-              {
-                type: "photo",
-                media: selectedPhoto[0].path,
-                caption:
-                  `👟 <b>Кроссовки <i>${selectedPhoto[0].name}</i></b>\n\n` +
-                  `🧵 <b>Характеристики:</b>\n\n` +
-                  `➖ <b>Цвет:</b> <i>${selectedPhoto[0].color}</i>\n` +
-                  `➖ <b>Материал:</b> <i>${selectedPhoto[0].material}</i>\n` +
-                  `➖ <b>Размер:</b> <i>${selectedPhoto[0].size} us</i>\n\n` +
-                  `💸 <b>Цена:</b> <code>${selectedPhoto[0].price}₽</code>\n\n`,
-                parse_mode: "HTML",
-              },
-              {
-                chat_id: chatId,
-                message_id: messageId - 1,
-                reply_markup: JSON.stringify({
-                  inline_keyboard: [
-                    [
-                      {
-                        text: "🛒 Заказать",
-                        callback_data: "order",
-                      },
-                    ],
-                    [
-                      {
-                        text: "🏠 Выход в главное меню",
-                        callback_data: "home",
-                      },
-                    ],
+              reply_markup: JSON.stringify({
+                inline_keyboard: [
+                  [
+                    {
+                      text: "🛒 Заказать",
+                      callback_data: "order",
+                    },
                   ],
-                }),
-              }
-            );
+                  [
+                    {
+                      text: "🏠 Выход в главное меню",
+                      callback_data: "exit",
+                    },
+                  ],
+                ],
+              }),
+            });
           }
           break;
 
@@ -1008,6 +1012,8 @@ module.exports = (bot) => {
               );
             }
           } else {
+            bot.deleteMessage(chatId, messageId - 1);
+            bot.deleteMessage(chatId, messageId);
             userSession = {
               gender: user[0].gender,
             };
@@ -1024,7 +1030,11 @@ module.exports = (bot) => {
               `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${userStorage[chatId].size} us </i></b>бренд: <b><i>${userStorage[chatId].data}</i></b>.\n\n` +
                 `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/stockhub12">🌐 StockHub!</a></b></i>`,
               {
-                reply_markup: JSON.stringify(keyboard),
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [{ text: "🏠 Выйти в главное меню", callback_data: "end" }],
+                  ],
+                }),
                 parse_mode: "HTML",
               }
             );

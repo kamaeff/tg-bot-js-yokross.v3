@@ -199,7 +199,7 @@ async function check_folow(YokrossId, chatId, bot, username) {
     ) {
       return true;
     } else {
-      await bot.sendPhoto(chatId, "./src/app/img/profile_second.jpg", {
+      await bot.sendPhoto(chatId, await send_photo("logo"), {
         caption:
           `✌🏼 Yo <i><b>${username}</b></i>, я помогу подобрать тебе кроссовки, чтобы воспользоваться моими функциями, подпишись на нашу группу <b><i><a href='https://t.me/stockhub12'>StockHub</a></i></b> !` +
           `\n\nТак же обязательно прочитай <b><i><a href='https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27'>Договор оферты</a></i></b> !\n\n` +
