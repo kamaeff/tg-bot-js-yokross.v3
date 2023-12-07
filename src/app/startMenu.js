@@ -88,6 +88,19 @@ const objectToString = (obj) => {
   return obj.toString();
 };
 
+async function check_text(userText) {
+  if (
+    userText === "/start" ||
+    userText == "/commands" ||
+    userText === "/guide" ||
+    userText === "/donate"
+  ) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 // ============ StartMenu ============
 module.exports = (bot) => {
   bot.onText(/\/start/, async (msg) => {
@@ -769,16 +782,54 @@ module.exports = (bot) => {
         break;
 
       case "cancel_order":
-        bot.deleteMessage(chatId, messageId + 1);
+        // bot.deleteMessage(chatId, messageId + 1);
 
         const cancelOrder = await delOrder(userStorage[chatId].order_id);
         if (cancelOrder === true) {
-          await start_update(bot, chatId, user_callBack, messageId);
-          logger.info(
-            objectToString(
-              `Cancel order by ${msg.message.chat.username}: Order_id ${userStorage[chatId].order_id} - ${cancelOrder}`
-            )
-          );
+          logger.info(`User ${msg.message.chat.first_name} in ShowRoom.`);
+          userSession = userSessions.get(chatId);
+          const photosWithDescriptions = await send_dynamic_add_photo();
+
+          if (photosWithDescriptions === false) {
+            bot.sendMessage(
+              chatId,
+              `✌🏼 Yo <i><b>${msg.message.chat.first_name}</b></i>, идет обновление каталога пар, извини за недоразумение. Скоро пофиксим!`,
+              {
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify(keyboard),
+              }
+            );
+          } else {
+            userStorage[chatId] = {
+              photo: photosWithDescriptions,
+              currentIndex: 0,
+            };
+
+            if (userStorage[chatId].photo.length > 0) {
+              const currentIndex = userStorage[chatId].currentIndex;
+              const firstPhoto = userStorage[chatId].photo[currentIndex];
+              const totalPhotos = userStorage[chatId].photo.length;
+              const showPrevButton = currentIndex > 0;
+
+              console.log(messageId);
+              await editCaptionShow(
+                bot,
+                chatId,
+                userSession,
+                messageId,
+                currentIndex,
+                firstPhoto,
+                totalPhotos,
+                showPrevButton
+              );
+            }
+          }
+          // await start_update(bot, chatId, user_callBack, messageId);
+          // logger.info(
+          //   objectToString(
+          //     `Cancel order by ${msg.message.chat.username}: Order_id ${userStorage[chatId].order_id} - ${cancelOrder}`
+          //   )
+          // );
         } else {
           logger.info(objectToString(cancelOrder));
         }
@@ -877,26 +928,18 @@ module.exports = (bot) => {
     const chatId = msg.chat.id;
     const userText = msg.text;
     const messageId = msg.message_id;
+    let checked = false;
 
     if (userStorage[chatId]) {
       const currentState = userStorage[chatId].state;
 
-      if (
-        userText === "/start" ||
-        userText == "/commands" ||
-        userText === "/guide" ||
-        userText === "/donate"
-      ) {
-        await bot.sendMessage(
-          chatId,
-          `Yo <b>${msg.chat.first_name}</b>, не стоит вводить команды в поле ввода сообщений`,
-          {
-            parse_mode: "HTML",
-          }
-        );
-      } else {
-        switch (currentState) {
-          case "articul":
+      switch (currentState) {
+        case "articul":
+          checked = await check_text(userText);
+
+          if (checked === false) {
+            break;
+          } else {
             userStorage[chatId].articul = userText;
 
             const buff = await search_articul(userText);
@@ -960,15 +1003,21 @@ module.exports = (bot) => {
                 }),
               });
             }
+          }
+          break;
+
+        case "awaitingAddress":
+          bot.deleteMessage(chatId, messageId);
+          userStorage[chatId].address = userText;
+          checked = await check_text(userText);
+
+          if (checked === false) {
             break;
-
-          case "awaitingAddress":
-            userStorage[chatId].address = userText;
-
+          } else {
+            // bot.deleteMessage(chatId, messageId);
             if (userStorage[chatId].address.length > 0) {
               await add_location(chatId, userStorage[chatId].address);
             }
-            delete userStorage[chatId];
             await profile(
               bot,
               chatId,
@@ -976,15 +1025,22 @@ module.exports = (bot) => {
               msg.chat.first_name,
               messageId - 1
             );
-            break;
+          }
+          break;
 
-          case "awaitingEmail":
-            userStorage[chatId].email = userText;
+        case "awaitingEmail":
+          bot.deleteMessage(chatId, messageId);
+          userStorage[chatId].email = userText;
+          checked = await check_text(userText);
+
+          if (checked === false) {
+            break;
+          } else {
+            // bot.deleteMessage(chatId, messageId);
 
             if (userStorage[chatId].email.length > 0) {
               await add_email(chatId, userStorage[chatId].email);
             }
-            delete userStorage[chatId];
             await profile(
               bot,
               chatId,
@@ -992,15 +1048,20 @@ module.exports = (bot) => {
               msg.chat.first_name,
               messageId - 1
             );
+          }
+          break;
+
+        case "awaitingFIO":
+          bot.deleteMessage(chatId, messageId);
+          userStorage[chatId].fio = userText;
+          checked = await check_text(userText);
+
+          if (checked === false) {
             break;
-
-          case "awaitingFIO":
-            userStorage[chatId].fio = userText;
-
+          } else {
             if (userStorage[chatId].fio.length > 0) {
               await add_fio(chatId, userStorage[chatId].fio);
             }
-            delete userStorage[chatId];
             await profile(
               bot,
               chatId,
@@ -1008,115 +1069,113 @@ module.exports = (bot) => {
               msg.chat.first_name,
               messageId - 1
             );
-            break;
+          }
+          break;
 
-          case "brandChoice":
-            userStorage[chatId].size = userText;
+        case "brandChoice":
+          userStorage[chatId].size = userText;
 
-            const log = await addToOrder(
-              userStorage[chatId].data,
-              userStorage[chatId].size,
-              chatId
+          const log = await addToOrder(
+            userStorage[chatId].data,
+            userStorage[chatId].size,
+            chatId
+          );
+          const user = await get_userStyle(chatId);
+
+          if (
+            parseFloat(userStorage[chatId].size) &&
+            log != false &&
+            log != undefined &&
+            log.some((log) => log.style === user[0].style)
+          ) {
+            const logMessage = `${userStorage[chatId].data}, size: ${
+              userStorage[chatId].size
+            }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
+
+            logger.info(logMessage);
+
+            userSession = {
+              size: userStorage[chatId].size,
+              shooes_name: log[0].name,
+              gender: user[0].gender,
+              style: user[0].style,
+            };
+            userSessions.set(chatId, userSession);
+
+            const res = await get_gender(
+              userSession.shooes_name,
+              userSession.size,
+              userSession.style,
+              userSession.gender
             );
-            const user = await get_userStyle(chatId);
 
-            if (
-              parseFloat(userStorage[chatId].size) &&
-              log != false &&
-              log != undefined &&
-              log.some((log) => log.style === user[0].style)
-            ) {
-              const logMessage = `${userStorage[chatId].data}, size: ${
-                userStorage[chatId].size
-              }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(
-                user
-              )}\n`;
+            userStorage[chatId] = {
+              photo: res,
+              currentIndex: 0,
+            };
 
-              logger.info(logMessage);
+            if (userStorage[chatId].photo.length > 0) {
+              const currentIndex = userStorage[chatId].currentIndex;
+              const firstPhoto = userStorage[chatId].photo[currentIndex];
+              const totalPhotos = userStorage[chatId].photo.length;
+              const showPrevButton = currentIndex > 0;
 
-              userSession = {
-                size: userStorage[chatId].size,
-                shooes_name: log[0].name,
-                gender: user[0].gender,
-                style: user[0].style,
-              };
-              userSessions.set(chatId, userSession);
-
-              const res = await get_gender(
-                userSession.shooes_name,
-                userSession.size,
-                userSession.style,
-                userSession.gender
-              );
-
-              userStorage[chatId] = {
-                photo: res,
-                currentIndex: 0,
-              };
-
-              if (userStorage[chatId].photo.length > 0) {
-                const currentIndex = userStorage[chatId].currentIndex;
-                const firstPhoto = userStorage[chatId].photo[currentIndex];
-                const totalPhotos = userStorage[chatId].photo.length;
-                const showPrevButton = currentIndex > 0;
-
-                console.log(userStorage[chatId]);
-                await editCaptionShow(
-                  bot,
-                  chatId,
-                  userStorage,
-                  messageId - 1,
-                  currentIndex,
-                  firstPhoto,
-                  totalPhotos,
-                  showPrevButton
-                );
-
-                logger.info(
-                  `Size: ${userStorage[chatId].size} us for ${
-                    msg.chat.first_name
-                  } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
-                    user[0].style
-                  }\n. Success, Output: ${res.length}\n\n${objectToString(
-                    res
-                  )}\n\n`
-                );
-              }
-            } else {
-              bot.deleteMessage(chatId, messageId - 1);
-              bot.deleteMessage(chatId, messageId);
-              userSession = {
-                gender: user[0].gender,
-              };
-              if (userSession.gender === "man") {
-                userSession.gender = "мужской";
-              } else {
-                userSession.gender = "женский";
-              }
-              logger.info(
-                `${msg.chat.first_name} cant find ${userStorage[chatId].data} ${userStorage[chatId].size} us`
-              );
-              await bot.sendMessage(
+              console.log(userStorage[chatId]);
+              await editCaptionShow(
+                bot,
                 chatId,
-                `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${userStorage[chatId].size} us </i></b>бренд: <b><i>${userStorage[chatId].data}</i></b>.\n\n` +
-                  `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/stockhub12">🌐 StockHub!</a></b></i>`,
-                {
-                  reply_markup: JSON.stringify({
-                    inline_keyboard: [
-                      [
-                        {
-                          text: "🏠 Выйти в главное меню",
-                          callback_data: "end",
-                        },
-                      ],
-                    ],
-                  }),
-                  parse_mode: "HTML",
-                }
+                userStorage,
+                messageId - 1,
+                currentIndex,
+                firstPhoto,
+                totalPhotos,
+                showPrevButton
+              );
+
+              logger.info(
+                `Size: ${userStorage[chatId].size} us for ${
+                  msg.chat.first_name
+                } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
+                  user[0].style
+                }\n. Success, Output: ${res.length}\n\n${objectToString(
+                  res
+                )}\n\n`
               );
             }
-            break;
-        }
+          } else {
+            bot.deleteMessage(chatId, messageId - 1);
+            bot.deleteMessage(chatId, messageId);
+            userSession = {
+              gender: user[0].gender,
+            };
+            if (userSession.gender === "man") {
+              userSession.gender = "мужской";
+            } else {
+              userSession.gender = "женский";
+            }
+            logger.info(
+              `${msg.chat.first_name} cant find ${userStorage[chatId].data} ${userStorage[chatId].size} us`
+            );
+            await bot.sendMessage(
+              chatId,
+              `☹️ <b>${msg.chat.first_name}</b>, я не смог найти ${userSession.gender} размер <b><i>${userStorage[chatId].size} us </i></b>бренд: <b><i>${userStorage[chatId].data}</i></b>.\n\n` +
+                `<b>Но</b> не стоит расстраиваться, следи за апдейтами в нашей группе <i><b><a href="https://t.me/stockhub12">🌐 StockHub!</a></b></i>`,
+              {
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "🏠 Выйти в главное меню",
+                        callback_data: "end",
+                      },
+                    ],
+                  ],
+                }),
+                parse_mode: "HTML",
+              }
+            );
+          }
+          break;
       }
     }
   });
