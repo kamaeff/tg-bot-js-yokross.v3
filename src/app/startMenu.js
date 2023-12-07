@@ -539,13 +539,12 @@ module.exports = (bot) => {
         break;
 
       case "articul":
-        // bot.deleteMessage(chatId, messageId);
+        bot.deleteMessage(chatId, messageId);
 
-        bot.editMessageCaption(
+        bot.sendMessage(
+          chatId,
           `Yo <i><b>${msg.message.chat.first_name}</b></i>, введи артикул пары, которую ты хочешь найти:`,
           {
-            chat_id: chatId,
-            message_id: messageId,
             parse_mode: "HTML",
           }
         );
@@ -889,21 +888,26 @@ module.exports = (bot) => {
           const buff = await search_articul(userText);
 
           if (buff === false) {
-            await bot.deleteMessage(chatId, messageId - 1);
-            await bot.sendPhoto(chatId, await send_photo("logo"), {
-              caption: `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
-              parse_mode: "HTML",
-              reply_markup: JSON.stringify({
-                inline_keyboard: [
-                  [
-                    {
-                      text: "🏠 Выход в главное меню",
-                      callback_data: "exit",
-                    },
+            await bot.deleteMessage(chatId, messageId);
+            await bot.editMessageText(
+              `Yo <i><b>${msg.chat.first_name}</b></i>, я не смог найти такой артикул. Или данная пара уже находится в стадии оплаты.`,
+              {
+                chat_id: chatId,
+                message_id: messageId - 1,
+
+                parse_mode: "HTML",
+                reply_markup: JSON.stringify({
+                  inline_keyboard: [
+                    [
+                      {
+                        text: "🏠 Выход в главное меню",
+                        callback_data: "end",
+                      },
+                    ],
                   ],
-                ],
-              }),
-            });
+                }),
+              }
+            );
           } else {
             userStorage[chatId] = { photo: buff, currentIndex: 0 };
             selectedPhoto = userStorage[chatId].photo;
