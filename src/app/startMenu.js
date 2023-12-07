@@ -1012,7 +1012,7 @@ module.exports = (bot) => {
               userStorage[chatId].size
             }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
 
-            // logger.info(logMessage);
+            logger.info(logMessage);
 
             userSession = {
               size: userStorage[chatId].size,
@@ -1052,15 +1052,15 @@ module.exports = (bot) => {
                 showPrevButton
               );
 
-              // logger.info(
-              //   `Size: ${userStorage[chatId].size} us for ${
-              //     msg.chat.first_name
-              //   } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
-              //     user[0].style
-              //   }\n. Success, Output: ${res.length}\n\n${objectToString(
-              //     res
-              //   )}\n\n`
-              // );
+              logger.info(
+                `Size: ${userStorage[chatId].size} us for ${
+                  msg.chat.first_name
+                } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
+                  user[0].style
+                }\n. Success, Output: ${res.length}\n\n${objectToString(
+                  res
+                )}\n\n`
+              );
             }
           } else {
             bot.deleteMessage(chatId, messageId - 1);
