@@ -664,20 +664,6 @@ module.exports = (bot) => {
         }
         break;
 
-      case "next_photo":
-        //bot.deleteMessage(chatId, messageId);
-        userSession = userSessions.get(chatId);
-
-        await next_photo(bot, chatId, userStorage, messageId);
-        break;
-
-      case "prev_photo":
-        //bot.deleteMessage(chatId, messageId);
-        userSession = userSessions.get(chatId);
-
-        await prev_photo(bot, chatId, userStorage, messageId);
-        break;
-
       case "order":
         // bot.deleteMessage(chatId, messageId);
 
@@ -797,6 +783,18 @@ module.exports = (bot) => {
         } else {
           logger.info(objectToString(cancelOrder));
         }
+        break;
+
+      case "next_photo":
+        // bot.deleteMessage(chatId, messageId + 1);
+
+        await next_photo(bot, chatId, userStorage, messageId);
+        break;
+
+      case "prev_photo":
+        //bot.deleteMessage(chatId, messageId);
+
+        await prev_photo(bot, chatId, userStorage, messageId);
         break;
 
       case "payment":
@@ -1014,7 +1012,7 @@ module.exports = (bot) => {
               userStorage[chatId].size
             }\nLog: ${objectToString(log)}\n\nUser: ${objectToString(user)}\n`;
 
-            logger.info(logMessage);
+            // logger.info(logMessage);
 
             userSession = {
               size: userStorage[chatId].size,
@@ -1042,10 +1040,11 @@ module.exports = (bot) => {
               const totalPhotos = userStorage[chatId].photo.length;
               const showPrevButton = currentIndex > 0;
 
+              console.log(userStorage[chatId]);
               await editCaptionShow(
                 bot,
                 chatId,
-                userStorage[chatId],
+                userStorage,
                 messageId - 1,
                 currentIndex,
                 firstPhoto,
@@ -1053,15 +1052,15 @@ module.exports = (bot) => {
                 showPrevButton
               );
 
-              logger.info(
-                `Size: ${userStorage[chatId].size} us for ${
-                  msg.chat.first_name
-                } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
-                  user[0].style
-                }\n. Success, Output: ${res.length}\n\n${objectToString(
-                  res
-                )}\n\n`
-              );
+              // logger.info(
+              //   `Size: ${userStorage[chatId].size} us for ${
+              //     msg.chat.first_name
+              //   } of ${log[0].name}\n Gender: ${user[0].gender}\n Style: ${
+              //     user[0].style
+              //   }\n. Success, Output: ${res.length}\n\n${objectToString(
+              //     res
+              //   )}\n\n`
+              // );
             }
           } else {
             bot.deleteMessage(chatId, messageId - 1);
@@ -1091,7 +1090,6 @@ module.exports = (bot) => {
               }
             );
           }
-          delete userStorage[chatId];
           break;
       }
     }
