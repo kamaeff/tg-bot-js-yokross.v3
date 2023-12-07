@@ -770,7 +770,7 @@ module.exports = (bot) => {
         break;
 
       case "cancel_order":
-        // bot.deleteMessage(chatId, messageId);
+        bot.deleteMessage(chatId, messageId + 1);
 
         const cancelOrder = await delOrder(userStorage[chatId].order_id);
         if (cancelOrder === true) {
