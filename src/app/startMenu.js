@@ -760,18 +760,29 @@ module.exports = (bot) => {
               }
             );
           } else {
-            bot.sendMessage(
-              chatId,
-              `<i><b>✌🏼 Yo ${msg.message.chat.first_name}</b></i>, кажется ты не заполнил информацию о себе. Давай исправим!\n<i>После заполнения возвращайся!</i>`,
+            bot.editMessageMedia(
               {
+                type: "photo",
+                media: await send_photo("logo"),
+                caption: `<i><b>✌🏼 Yo ${msg.message.chat.first_name}</b></i>, кажется ты не заполнил информацию о себе. Давай исправим!\n<i>После заполнения возвращайся!</i>`,
                 parse_mode: "HTML",
+              },
+              {
+                chat_id: chatId,
+                message_id: messageId,
+
                 reply_markup: JSON.stringify({
                   inline_keyboard: [
-                    [{ text: "Заполнить профиль", callback_data: "profile" }],
+                    [
+                      {
+                        text: "✌🏼 Заполнить профиль",
+                        callback_data: "profile",
+                      },
+                    ],
                     [
                       {
                         text: "🏠 Выход в главное меню",
-                        callback_data: "home",
+                        callback_data: "end",
                       },
                     ],
                   ],
