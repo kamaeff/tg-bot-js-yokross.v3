@@ -41,6 +41,7 @@ const {
   check_folow,
   start_update,
   profile,
+  profile_push,
 } = require("./func/main-func");
 
 const { admins } = require("./func/admin");
@@ -245,6 +246,7 @@ module.exports = (bot) => {
 
       case "email":
         // bot.deleteMessage(chatId, messageId);
+        console.log(messageId);
 
         bot.editMessageCaption(
           `✌🏼 Yo <b>${msg.message.chat.first_name}</b>, напиши мне свою рабочую почту (это надо для отправки чека после покупки)`,
@@ -1007,68 +1009,56 @@ module.exports = (bot) => {
           break;
 
         case "awaitingAddress":
-          bot.deleteMessage(chatId, messageId);
+          // bot.deleteMessage(chatId, messageId);
           userStorage[chatId].address = userText;
           checked = await check_text(userText);
 
           if (checked === false) {
             break;
           } else {
-            // bot.deleteMessage(chatId, messageId);
+            bot.deleteMessage(chatId, messageId - 1);
+            bot.deleteMessage(chatId, messageId);
             if (userStorage[chatId].address.length > 0) {
               await add_location(chatId, userStorage[chatId].address);
             }
-            await profile(
-              bot,
-              chatId,
-              userStorage,
-              msg.chat.first_name,
-              messageId - 1
-            );
+            await profile_push(bot, chatId, userStorage, msg.chat.first_name);
           }
           break;
 
         case "awaitingEmail":
-          bot.deleteMessage(chatId, messageId);
+          // bot.deleteMessage(chatId, messageId);
+          console.log(messageId);
           userStorage[chatId].email = userText;
           checked = await check_text(userText);
 
           if (checked === false) {
             break;
           } else {
-            // bot.deleteMessage(chatId, messageId);
+            bot.deleteMessage(chatId, messageId - 1);
+            bot.deleteMessage(chatId, messageId);
 
             if (userStorage[chatId].email.length > 0) {
               await add_email(chatId, userStorage[chatId].email);
             }
-            await profile(
-              bot,
-              chatId,
-              userStorage,
-              msg.chat.first_name,
-              messageId - 1
-            );
+            await profile_push(bot, chatId, userStorage, msg.chat.first_name);
           }
           break;
 
         case "awaitingFIO":
-          bot.deleteMessage(chatId, messageId);
+          // bot.deleteMessage(chatId, messageId);
           userStorage[chatId].fio = userText;
           checked = await check_text(userText);
 
           if (checked === false) {
             break;
           } else {
+            bot.deleteMessage(chatId, messageId - 1);
+            bot.deleteMessage(chatId, messageId);
+
             if (userStorage[chatId].fio.length > 0) {
               await add_fio(chatId, userStorage[chatId].fio);
             }
-            await profile(
-              bot,
-              chatId,
-              userStorage,
-              msg.chat.first_name,
-              messageId - 1
-            );
+            await profile_push(bot, chatId, userStorage, msg.chat.first_name);
           }
           break;
 

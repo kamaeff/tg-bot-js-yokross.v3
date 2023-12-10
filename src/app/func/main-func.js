@@ -66,6 +66,93 @@ async function start_update(bot, chatId, username, messageid) {
   );
 }
 
+async function profile_push(bot, chatId, userStorage, username) {
+  const profileData = await getProfile(chatId);
+  if (profileData.length > 0) {
+    const profile = profileData[0];
+    userStorage[chatId] = {
+      orders: profile.orders,
+      locale: profile.locale,
+      bonuses: profile.bonus,
+      email: profile.email,
+      fio: profile.fio,
+    };
+
+    const chat_id = chatId.toString();
+    const chat =
+      chat_id === process.env.GROUP_ADMIN ||
+      chat_id === process.env.ADMIN_ID ||
+      chat_id === process.env.LOGIST ||
+      chat_id === process.env.SERVIRCE_ID;
+
+    await bot.sendPhoto(chatId, "./src/app/img/Logo.png", {
+      caption:
+        `📈 <b>Вот твоя стата ${username}:</b>\n\n` +
+        `● <b>ФИО:</b> <i>${
+          userStorage[chatId].fio.length === 0
+            ? ` 🚫 <i><b>Не заполнено!</b></i>`
+            : userStorage[chatId].fio
+        }</i>\n` +
+        `● <b>Всего заказов сделано:</b> <i>${userStorage[chatId].orders}</i>\n` +
+        `● <b>Бонусы:</b> <i>${userStorage[chatId].bonuses}</i>\n` +
+        `● <b>Способ доставки:</b> <i>${
+          userStorage[chatId].locale.length === 0
+            ? ` 🚫 <i><b>Не заполнено!</b></i>`
+            : userStorage[chatId].locale
+        }</i>\n` +
+        `● <b>Email:</b> <i>${
+          userStorage[chatId].email.length === 0
+            ? ` 🚫 <i><b>Не заполнено!</b></i>`
+            : userStorage[chatId].email
+        }</i>\n\n` +
+        `<i><b>P.S</b> Email, Адрес ПВЗ и ФИО нужны для формирования заказа</i>\n\n<i>Доставка по Москве возможна нашим курьром. Стоимость доставки в пределах МКАД составит 500 рублей, за пределами МКАД 800 рублей. Также возможна доставка в ПВЗ Боксберри.</i>`,
+      parse_mode: "HTML",
+      reply_markup: JSON.stringify({
+        inline_keyboard: [
+          [
+            {
+              text: "⏳ История заказов",
+              callback_data: "data_orders",
+            },
+            {
+              text: "📦 Обновить адрес",
+              callback_data: "locale",
+            },
+          ],
+          [
+            {
+              text:
+                userStorage[chatId].email.length === 0
+                  ? "✉️ Заполнить email"
+                  : "",
+              callback_data: "email",
+            },
+          ],
+          [
+            {
+              text:
+                userStorage[chatId].fio.length === 0 ? "👤 Заполнить ФИО" : "",
+              callback_data: "fio",
+            },
+          ],
+          [
+            {
+              text: chat ? "📑 Админка" : "",
+              callback_data: "admin",
+            },
+          ],
+          [
+            {
+              text: "🏠 Выход в главное меню",
+              callback_data: "exit",
+            },
+          ],
+        ],
+      }),
+    });
+  }
+}
+
 async function profile(bot, chatId, userStorage, username, messageid) {
   const profileData = await getProfile(chatId);
   if (profileData.length > 0) {
@@ -239,4 +326,5 @@ module.exports = {
   check_folow,
   start_update,
   profile,
+  profile_push,
 };
