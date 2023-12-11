@@ -15,7 +15,6 @@ async function editCaptionShow(
       media: photo.path,
       caption:
         `👟 <b>Кроссовки <i>${photo.name}</i>\n<b>🔎 Articul:</b> <code>${photo.articul}</code></b>\n\n` +
-        `🧵 <b>Характеристики:</b>\n\n` +
         `➖ <b>Пол:</b> <i>${photo.gender}</i>\n` +
         `➖ <b>Цвет:</b> <i>${photo.color}</i>\n` +
         `➖ <b>Материал:</b> <i>${photo.material}</i>\n` +

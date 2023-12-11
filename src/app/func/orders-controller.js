@@ -25,16 +25,12 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
           type: "photo",
           media: currentPhoto.path,
           caption:
-            `👟 <b>Кроссовки ${currentPhoto.name}</b>\n ${
-              get_order == false
-                ? "\n"
-                : `<i>Зкакз: ${get_order[0].order_id}</i>\n\n`
-            }` +
-            `🧵 <b>Характеристики:</b>\n\n` +
+            `👟 <b>Кроссовки ${currentPhoto.name}</b>\n` +
+            `<i>Зкакз: ${get_order[0].order_id}</i>\n\n` +
             `➖ <b>Цвет:</b> <i>${currentPhoto.color}</i>\n` +
             `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
             `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
-            `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>\n\n`,
+            `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>`,
           parse_mode: "HTML",
         },
         {
@@ -58,11 +54,7 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
               ],
               [
                 {
-                  text: `${
-                    get_order === false
-                      ? ""
-                      : `🚚 Код отслеживания:${get_order[0].track_value}`
-                  }`,
+                  text: `🚚 Код отслеживания:${get_order[0].track_value}`,
                   url: "https://boxberry.ru/tracking-page",
                 },
               ],
