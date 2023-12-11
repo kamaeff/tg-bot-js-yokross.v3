@@ -716,7 +716,6 @@ module.exports = (bot) => {
                 `🚚 <b>ПВЗ Boxberry: </b><i>${userSession.locale}</i>\n` +
                 `✉️ <b>Email для отправки чека: </b><i>${userSession.email}</i>\n\n` +
                 `👟 <b>Кроссовки <i>${selectedPhoto.name}</i></b>\n\n` +
-                `🧵 <b>Характеристики:</b>\n\n` +
                 `➖ <b>Цвет:</b> <i>${selectedPhoto.color}</i>\n` +
                 `➖ <b>Материал:</b> <i>${selectedPhoto.material}</i>\n` +
                 `➖ <b>Размер:</b> <i>${selectedPhoto.size} us</i>\n\n` +
