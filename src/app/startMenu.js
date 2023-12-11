@@ -697,7 +697,6 @@ module.exports = (bot) => {
             email: profile.email,
             fio: profile.fio,
           };
-          console.log(profile);
           logger.info(objectToString(profile));
           userStorage[chatId] = { order_id: userSession.order_id };
 
@@ -990,8 +989,9 @@ module.exports = (bot) => {
               await bot.deleteMessage(chatId, messageId - 1);
               await bot.sendPhoto(chatId, selectedPhoto[0].path, {
                 caption:
-                  `👟 <b>Кроссовки <i>${selectedPhoto[0].name}</i></b>\n\n` +
+                  `👟 <b>Кроссовки <i>${photo.name}</i>\n<b>🔎 Articul:</b> <code>${photo.articul}</code></b>\n\n` +
                   `🧵 <b>Характеристики:</b>\n\n` +
+                  `➖ <b>Пол:</b> <i>${photo.gender}</i>\n` +
                   `➖ <b>Цвет:</b> <i>${selectedPhoto[0].color}</i>\n` +
                   `➖ <b>Материал:</b> <i>${selectedPhoto[0].material}</i>\n` +
                   `➖ <b>Размер:</b> <i>${selectedPhoto[0].size} us</i>\n\n` +
