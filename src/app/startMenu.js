@@ -29,7 +29,6 @@ const {
   add_fio,
   check_payment,
   search_articul,
-  add_msk,
   getProfile,
 } = require("./DB/db");
 
@@ -533,7 +532,6 @@ module.exports = (bot) => {
         break;
 
       case "data_orders":
-        // bot.deleteMessage(chatId, messageId);
         const orders = await past_orders(chatId);
         console.log(orders);
         if (orders === false) {
@@ -548,7 +546,8 @@ module.exports = (bot) => {
             }
           );
         } else {
-          await showorders(bot, orders, chatId, userStorage, msg);
+          // bot.deleteMessage(chatId, messageId);
+          await showorders(bot, orders, chatId, userStorage, messageId);
         }
 
         break;

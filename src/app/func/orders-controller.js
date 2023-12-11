@@ -1,13 +1,17 @@
 const { chatOptions_profile } = require("./btns");
 
-// const { get_order_id } = require("../DB/db");
+const { get_order_id } = require("../DB/db");
 
 async function showorders(bot, orders, chatId, userStorage, msg) {
   if (orders === false) {
   } else {
-    userStorage[chatId] = { photos: orders, currentIndex: 0 };
+    const get_order = await get_order_id(chatId);
+    userStorage[chatId] = {
+      photos: orders,
+      currentIndex: 0,
+    };
 
-    // const get_order = await get_order_id(chatId);
+    console.log(get_order[0].order);
 
     if (userStorage[chatId].photos.length > 0) {
       const currentIndex = userStorage[chatId].currentIndex;
@@ -16,40 +20,57 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
       const showPrevButton = currentIndex > 0;
       const showNextButton = currentIndex < totalPhotos - 1;
 
-      bot.sendPhoto(chatId, currentPhoto.path, {
-        caption:
-          `👟 <b>Кроссовки ${currentPhoto.name}</b>\n\n` +
-          `🧵 <b>Характеристики:</b>\n\n` +
-          `➖ <b>Цвет:</b> <i>${currentPhoto.color}</i>\n` +
-          `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
-          `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
-          `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>\n\n`,
-        // `${
-        //   get_order === false
-        //     ? ""
-        //     : `🚚 <b>Код отслеживания:</b> <code>${get_order}₽</code>`
-        // }`,
-        parse_mode: "HTML",
-        reply_markup: JSON.stringify({
-          inline_keyboard: [
-            [
-              {
-                text: showPrevButton ? "<<" : "",
-                callback_data: "prev_photo_o",
-              },
-              {
-                text: `${currentIndex + 1}/${totalPhotos}`,
-                callback_data: "dummy",
-              },
-              {
-                text: showNextButton ? ">>" : "",
-                callback_data: "next_photo_o",
-              },
+      bot.editMessageMedia(
+        {
+          type: "photo",
+          media: currentPhoto.path,
+          caption:
+            `👟 <b>Кроссовки ${currentPhoto.name}</b>\n ${
+              get_order == false
+                ? "\n"
+                : `<i>Зкакз: ${get_order[0].order_id}</i>\n\n`
+            }` +
+            `🧵 <b>Характеристики:</b>\n\n` +
+            `➖ <b>Цвет:</b> <i>${currentPhoto.color}</i>\n` +
+            `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
+            `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
+            `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>\n\n`,
+          parse_mode: "HTML",
+        },
+        {
+          chat_id: chatId,
+          message_id: msg,
+          reply_markup: JSON.stringify({
+            inline_keyboard: [
+              [
+                {
+                  text: showPrevButton ? "<<" : "",
+                  callback_data: "prev_photo_o",
+                },
+                {
+                  text: `${currentIndex + 1}/${totalPhotos}`,
+                  callback_data: "dummy",
+                },
+                {
+                  text: showNextButton ? ">>" : "",
+                  callback_data: "next_photo_o",
+                },
+              ],
+              [
+                {
+                  text: `${
+                    get_order === false
+                      ? ""
+                      : `🚚 Код отслеживания:${get_order[0].track_value}`
+                  }`,
+                  url: "https://boxberry.ru/tracking-page",
+                },
+              ],
+              [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
             ],
-            [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
-          ],
-        }),
-      });
+          }),
+        }
+      );
     }
   }
 }

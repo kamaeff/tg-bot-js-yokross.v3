@@ -599,62 +599,24 @@ async function search_articul(articul) {
   }
 }
 
-async function add_msk(chat_id, msk) {
-  const connection = await createConnection();
-  try {
-    await connection.execute("UPDATE users SET locale =? WHERE chat_id =?", [
-      "доставка по мск - " + msk,
-      chat_id,
-    ]);
-    return true;
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
-}
-
-async function get_track() {
-  const connection = await createConnection();
-  try {
-    const [rows] = await connection.execute(
-      "SELECT * FROM orders WHERE order_status = 'Оплачено' AND ordered = 'Доставка'"
-    );
-
-    console.log("rows in db: ", rows.length);
-
-    if (rows.length > 0) {
-      const res = rows.map((row) => ({
-        chat_id: row.chat_id,
-        order_id: row.order_id,
-        order_status: row.order_status,
-        track_value: row.track_value,
-      }));
-      return res;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
-}
-
 async function get_order_id(chat_id) {
   const connection = await createConnection();
+  console.log(chat_id);
+
   try {
     const [rows] = await connection.execute(
-      "SELECT * FROM orders WHERE chat_id =? AND order_status =?",
-      [chat_id, "Оплачено"]
+      "SELECT track_value, order_id FROM orders WHERE chat_id =? AND order_status =?",
+      [chat_id.toString(), "Оплачено"]
     );
 
-    console.log("rows in db: ", rows);
+    console.log(rows[0].track_value);
 
-    if (rows.length > 0) {
-      const res = rows.map((row) => {
-        order_id = row.order_id;
-        track_value = row.track_value;
-        return res;
-      });
+    if (rows.length > 0 && rows[0].track_value) {
+      const track = rows.map((row) => ({
+        order_id: row.order_id,
+        track_value: row.track_value,
+      }));
+      return track;
     } else {
       return false;
     }
@@ -688,7 +650,5 @@ module.exports = {
   add_fio,
   check_payment,
   search_articul,
-  add_msk,
-  get_track,
   get_order_id,
 };
