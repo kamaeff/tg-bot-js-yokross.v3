@@ -613,7 +613,59 @@ async function add_msk(chat_id, msk) {
   }
 }
 
+async function get_track() {
+  const connection = await createConnection();
+  try {
+    const [rows] = await connection.execute(
+      "SELECT * FROM orders WHERE order_status = 'Оплачено' AND ordered = 'Доставка'"
+    );
+
+    console.log("rows in db: ", rows.length);
+
+    if (rows.length > 0) {
+      const res = rows.map((row) => ({
+        chat_id: row.chat_id,
+        order_id: row.order_id,
+        order_status: row.order_status,
+        track_value: row.track_value,
+      }));
+      return res;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
+async function get_order_id(chat_id) {
+  const connection = await createConnection();
+  try {
+    const [rows] = await connection.execute(
+      "SELECT * FROM orders WHERE chat_id =? AND order_status =?",
+      [chat_id, "Оплачено"]
+    );
+
+    console.log("rows in db: ", rows);
+
+    if (rows.length > 0) {
+      const res = rows.map((row) => {
+        order_id = row.order_id;
+        track_value = row.track_value;
+        return res;
+      });
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+}
+
 module.exports = {
+  createConnection,
   add_user,
   send_photo,
   send_dynamic_add_photo,
@@ -637,4 +689,6 @@ module.exports = {
   check_payment,
   search_articul,
   add_msk,
+  get_track,
+  get_order_id,
 };

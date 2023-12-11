@@ -597,7 +597,7 @@ module.exports = (bot) => {
         break;
 
       case "home":
-        await add_user(chatId, msg.message.chat.username);
+        // await add_user(chatId, msg.message.chat.username);
         logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
 
         bot.deleteMessage(chatId, messageId);
@@ -605,7 +605,7 @@ module.exports = (bot) => {
         break;
 
       case "exit":
-        await add_user(chatId, msg.message.chat.username);
+        // await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(
           YokrossId,

@@ -1,9 +1,13 @@
 const { chatOptions_profile } = require("./btns");
 
+// const { get_order_id } = require("../DB/db");
+
 async function showorders(bot, orders, chatId, userStorage, msg) {
   if (orders === false) {
   } else {
     userStorage[chatId] = { photos: orders, currentIndex: 0 };
+
+    // const get_order = await get_order_id(chatId);
 
     if (userStorage[chatId].photos.length > 0) {
       const currentIndex = userStorage[chatId].currentIndex;
@@ -19,7 +23,12 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
           `➖ <b>Цвет:</b> <i>${currentPhoto.color}</i>\n` +
           `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
           `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
-          `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>`,
+          `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>\n\n`,
+        // `${
+        //   get_order === false
+        //     ? ""
+        //     : `🚚 <b>Код отслеживания:</b> <code>${get_order}₽</code>`
+        // }`,
         parse_mode: "HTML",
         reply_markup: JSON.stringify({
           inline_keyboard: [
