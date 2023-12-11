@@ -605,7 +605,6 @@ module.exports = (bot) => {
         break;
 
       case "exit":
-        // bot.deleteMessage(chatId, messageId + 1);
         await add_user(chatId, msg.message.chat.username);
 
         check = await check_folow(
@@ -617,7 +616,6 @@ module.exports = (bot) => {
         );
         if (check === true) {
           logger.info(`User ${msg.message.chat.first_name} go to Menu.`);
-          // await start(bot, chatId, msg.message.chat.first_name);
           await start_update(
             bot,
             chatId,
@@ -628,7 +626,6 @@ module.exports = (bot) => {
         break;
 
       case "show":
-        // bot.deleteMessage(chatId, messageId);
         check = await check_folow(
           YokrossId,
           chatId,
@@ -679,8 +676,6 @@ module.exports = (bot) => {
         break;
 
       case "order":
-        // bot.deleteMessage(chatId, messageId);
-
         selectedPhoto =
           userStorage[chatId].photo[userStorage[chatId].currentIndex];
 
@@ -836,26 +831,16 @@ module.exports = (bot) => {
               );
             }
           }
-          // await start_update(bot, chatId, user_callBack, messageId);
-          // logger.info(
-          //   objectToString(
-          //     `Cancel order by ${msg.message.chat.username}: Order_id ${userStorage[chatId].order_id} - ${cancelOrder}`
-          //   )
-          // );
         } else {
           logger.info(objectToString(cancelOrder));
         }
         break;
 
       case "next_photo":
-        // bot.deleteMessage(chatId, messageId + 1);
-
         await next_photo(bot, chatId, userStorage, messageId);
         break;
 
       case "prev_photo":
-        //bot.deleteMessage(chatId, messageId);
-
         await prev_photo(bot, chatId, userStorage, messageId);
         break;
 
