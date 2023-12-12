@@ -208,7 +208,7 @@ module.exports = (bot) => {
           "<i><b>Snippets</b></i>\n\n" +
             `➖ <b><i>Сниппет правил:</i></b>\n` +
             `<b><i><a href = "https://telegra.ph/Pravila-chata-11-06-17">📑 Правила чата</a></i></b>\n⁉️ Уважение трудно заработать, но легко потерять.` +
-            ` <b>Договор оферты:</b> <a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27"><a/>`,
+            `<b>Договор оферты:</b> <a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27"></a>`,
           { parse_mode: "HTML", reply_markup: JSON.stringify(admin_btns) }
         );
         break;
