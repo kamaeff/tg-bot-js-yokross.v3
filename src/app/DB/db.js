@@ -601,7 +601,7 @@ async function search_articul(articul) {
 
 async function get_order_id(chat_id) {
   const connection = await createConnection();
-  console.log(chat_id);
+  // console.log(name);
 
   try {
     const [rows] = await connection.execute(
@@ -609,7 +609,7 @@ async function get_order_id(chat_id) {
       [chat_id.toString(), "Оплачено"]
     );
 
-    console.log(rows[0].track_value);
+    console.log("rows in db: ", rows[0].track_value);
 
     if (rows.length > 0 && rows[0].track_value) {
       const track = rows.map((row) => ({

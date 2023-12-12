@@ -5,13 +5,16 @@ const { get_order_id } = require("../DB/db");
 async function showorders(bot, orders, chatId, userStorage, msg) {
   if (orders === false) {
   } else {
-    const get_order = await get_order_id(chatId);
     userStorage[chatId] = {
       photos: orders,
       currentIndex: 0,
     };
 
-    console.log(get_order[0].order);
+    const get_order = await get_order_id(
+      chatId,
+      userStorage[chatId].photos[userStorage[chatId].currentIndex].name
+    );
+    console.log(get_order);
 
     if (userStorage[chatId].photos.length > 0) {
       const currentIndex = userStorage[chatId].currentIndex;
@@ -26,11 +29,20 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
           media: currentPhoto.path,
           caption:
             `👟 <b>Кроссовки ${currentPhoto.name}</b>\n` +
-            `<i>Зкакз: ${get_order[0].order_id}</i>\n\n` +
+            `${
+              get_order === false
+                ? "\n"
+                : `<i>Зкакз: ${get_order[0].order_id}</i>\n\n`
+            }` +
             `➖ <b>Цвет:</b> <i>${currentPhoto.color}</i>\n` +
             `➖ <b>Материал:</b> <i>${currentPhoto.material}</i>\n` +
             `➖ <b>Размер:</b> <i>${currentPhoto.size} us</i>\n\n` +
-            `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>`,
+            `💸 <b>Цена:</b> <code>${currentPhoto.price}₽</code>\n\n` +
+            `${
+              get_order == false
+                ? ""
+                : `<i><b>🚚 Код отслеживания:</b> <code>${get_order[0].track_value}</code></i>`
+            }`,
           parse_mode: "HTML",
         },
         {
@@ -52,12 +64,6 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
                   callback_data: "next_photo_o",
                 },
               ],
-              [
-                {
-                  text: `🚚 Код отслеживания:${get_order[0].track_value}`,
-                  url: "https://boxberry.ru/tracking-page",
-                },
-              ],
               [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
             ],
           }),
@@ -74,17 +80,28 @@ async function Photo_orders(
   currentIndex,
   photo,
   totalPhotos,
-  showPrevButton
+  showPrevButton,
+  get_order
 ) {
   const showNext = currentIndex + 1 < totalPhotos;
   await bot.sendPhoto(chatId, photo.path, {
     caption:
       `👟 <b>Кроссовки ${photo.name}</b>\n\n` +
+      `${
+        get_order === false
+          ? "\n"
+          : `<i>Зкакз: ${get_order[currentIndex].order_id}</i>\n\n`
+      }` +
       `🧵 <b>Характеристики:</b>\n\n` +
       `➖ <b>Цвет:</b> <i>${photo.color}</i>\n` +
       `➖ <b>Материал:</b> <i>${photo.material}</i>\n` +
       `➖ <b>Размер:</b> <i>${photo.size} us</i>\n\n` +
-      `💸 <b>Цена:</b> <code>${photo.price}₽</code>`,
+      `💸 <b>Цена:</b> <code>${photo.price}₽</code>` +
+      `${
+        get_order == false
+          ? ""
+          : `<i><b>🚚 Код отслеживания:</b> <code>${get_order[currentIndex].track_value}</code></i>`
+      }`,
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
       inline_keyboard: [
@@ -107,6 +124,12 @@ async function next_photo_o(bot, userStorage, chatId) {
     const currentIndex = userStorage[chatId].currentIndex;
     const nextIndex = currentIndex + 1;
 
+    const get_order = await get_order_id(
+      chatId,
+      userStorage[chatId].photos[nextIndex].name
+    );
+    console.log(get_order);
+
     if (nextIndex < userStorage[chatId].photos.length) {
       const nextPhoto = userStorage[chatId].photos[nextIndex];
       const totalPhotos = userStorage[chatId].photos.length;
@@ -118,7 +141,8 @@ async function next_photo_o(bot, userStorage, chatId) {
         nextIndex,
         nextPhoto,
         totalPhotos,
-        true
+        true,
+        get_order
       );
 
       userStorage.currentIndex = nextIndex;
@@ -133,6 +157,12 @@ async function prev_photo_o(bot, chatId, userStorage) {
     const currentIndex = userStorage[chatId].currentIndex;
     const prevIndex = currentIndex;
 
+    const get_order = await get_order_id(
+      chatId,
+      userStorage[chatId].photos[prevIndex].name
+    );
+    console.log(get_order);
+
     if (prevIndex >= 0) {
       const prevPhoto = userStorage[chatId].photos[prevIndex];
       const totalPhotos = userStorage[chatId].photos.length;
@@ -145,7 +175,8 @@ async function prev_photo_o(bot, chatId, userStorage) {
         prevIndex,
         prevPhoto,
         totalPhotos,
-        showPrevButton
+        showPrevButton,
+        get_order
       );
       userStorage[chatId].currentIndex = prevIndex;
     }

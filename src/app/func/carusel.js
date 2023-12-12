@@ -9,6 +9,7 @@ async function editCaptionShow(
   showPrevButton
 ) {
   const showNext = currentIndex + 1 < totalPhotos;
+  console.log(currentIndex);
   await bot.editMessageMedia(
     {
       type: "photo",
