@@ -567,17 +567,17 @@ module.exports = (bot) => {
         break;
 
       case "next_photo_o":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await next_photo_o(bot, userStorage, chatId);
+        await next_photo_o(bot, userStorage, chatId, messageId);
         break;
 
       case "prev_photo_o":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         userSession = userSessions.get(chatId);
 
-        await prev_photo_o(bot, chatId, userStorage);
+        await prev_photo_o(bot, chatId, userStorage, messageId);
         break;
 
       case "end":

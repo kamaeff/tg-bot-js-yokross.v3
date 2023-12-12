@@ -611,7 +611,7 @@ async function get_order_id(chat_id) {
 
     console.log("rows in db: ", rows[0].track_value);
 
-    if (rows.length > 0 && rows[0].track_value) {
+    if (rows.length > 0) {
       const track = rows.map((row) => ({
         order_id: row.order_id,
         track_value: row.track_value,
