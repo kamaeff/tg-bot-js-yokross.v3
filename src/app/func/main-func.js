@@ -44,7 +44,7 @@ async function start_update(bot, chatId, username, messageid) {
         `<b><i>💬 Полезное:</i></b> \n` +
         `<i><b><a href="https://telegra.ph/Dogovor-oferty-na-okazanie-uslugi-11-27">➖ Договор оферты</a></b></i>\n` +
         `➖ /commands <i>(Дополнительные команды)</i>\n\n` +
-        `<i><b>Created by: </b><b><a href="https://t.me/YoKrossbot_log">Anton Kamaev</a></b>.\n<b>Alfa-version.v3</b></i>`,
+        `<i><b>Created by: </b><b><a href="https://t.me/YoKrossbot_log">Anton Kamaev</a></b>.\n<b>Beta-version(stable).v1</b></i>`,
       parse_mode: "HTML",
     },
 
