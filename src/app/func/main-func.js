@@ -97,7 +97,7 @@ async function profile_push(bot, chatId, userStorage, username) {
         }</i>\n` +
         `● <b>Всего заказов сделано:</b> <i>${userStorage[chatId].orders}</i>\n` +
         `● <b>Бонусы:</b> <i>${userStorage[chatId].bonuses}</i>\n` +
-        `● <b>Способ доставки:</b> <i>${
+        `● <b>Адрес доставки:</b> <i>${
           userStorage[chatId].locale.length === 0
             ? ` 🚫 <i><b>Не заполнено!</b></i>`
             : userStorage[chatId].locale
@@ -183,7 +183,7 @@ async function profile(bot, chatId, userStorage, username, messageid) {
         }</i>\n` +
         `● <b>Всего заказов сделано:</b> <i>${userStorage[chatId].orders}</i>\n` +
         `● <b>Бонусы:</b> <i>${userStorage[chatId].bonuses}</i>\n` +
-        `● <b>Способ доставки:</b> <i>${
+        `● <b>Адрес доставки:</b> <i>${
           userStorage[chatId].locale.length === 0
             ? ` 🚫 <i><b>Не заполнено!</b></i>`
             : userStorage[chatId].locale
