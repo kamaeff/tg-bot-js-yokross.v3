@@ -197,7 +197,7 @@ module.exports = (bot) => {
         break;
 
       case "admin_tables":
-        bot.deleteMessage(chatId, messageId);
+        // bot.deleteMessage(chatId, messageId);
         await admins(bot, chatId);
         break;
 

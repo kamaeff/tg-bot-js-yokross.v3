@@ -37,10 +37,7 @@ async function editCaptionShow(
             },
             { text: showNext ? ">>" : "", callback_data: "next_photo" },
           ],
-          [
-            { text: "🇷🇺 Заказ по России", callback_data: "order" },
-            //{ text: "🛒 Заказ по МСК", callback_data: "order_msk" },
-          ],
+          [{ text: "🛒 Заказать", callback_data: "order" }],
           [{ text: "🏠 Выход в главное меню", callback_data: "end" }],
         ],
       }),
