@@ -145,7 +145,7 @@ async function profile_push(bot, chatId, userStorage, username) {
           ],
           [
             {
-              text: "🏠 Выход в главное меню",
+              text: "🏠 Главное меню",
               callback_data: "exit",
             },
           ],
@@ -236,7 +236,7 @@ async function profile(bot, chatId, userStorage, username, messageid) {
             ],
             [
               {
-                text: "🏠 Выход в главное меню",
+                text: "🏠 Главное меню",
                 callback_data: "exit",
               },
             ],
@@ -266,9 +266,7 @@ async function tech(bot, chatId, username) {
       `🥺 Кому интересно, буду делиться своими мыслями и апдейтами вот тут ---> <b><a href="https://t.me/YoKrossbot_log">YoKrossBot.log.</a></b>`,
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
-      ],
+      inline_keyboard: [[{ text: "🏠 Главное меню", callback_data: "exit" }]],
     }),
   });
 }

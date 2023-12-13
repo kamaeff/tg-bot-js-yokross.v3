@@ -72,7 +72,7 @@ async function showorders(bot, orders, chatId, userStorage, msg) {
                   },
                 },
               ],
-              [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+              [{ text: "🏠 Главное меню", callback_data: "exit" }],
             ],
           }),
         }
@@ -136,7 +136,7 @@ async function Photo_orders(
               },
             },
           ],
-          [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+          [{ text: "🏠 Главное меню", callback_data: "exit" }],
         ],
       }),
     }

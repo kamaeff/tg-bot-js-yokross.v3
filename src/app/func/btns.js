@@ -1,9 +1,7 @@
 const { get_userStyle } = require("../DB/db");
 
 const keyboard = {
-  inline_keyboard: [
-    [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
-  ],
+  inline_keyboard: [[{ text: "🏠 Главное меню", callback_data: "exit" }]],
 };
 
 const admin_btns = {
@@ -31,7 +29,7 @@ const chatOptions_profile = {
     [{ text: "✌🏼 Мой профиль", callback_data: "profile" }],
     [
       {
-        text: "🏠 Выход в главное меню",
+        text: "🏠 Главное меню",
         callback_data: "exit",
       },
     ],
@@ -55,7 +53,7 @@ const profile_keyboard = {
       { text: "🌐 Отправить геолакацию", callback_data: "locale" },
       { text: "✉️ Заполнить почту", callback_data: "email" },
     ],
-    [{ text: "🏠 Выход в главное меню", callback_data: "home" }],
+    [{ text: "🏠 Главное меню", callback_data: "home" }],
   ],
 };
 
@@ -69,7 +67,7 @@ async function check_style(chat_id) {
           { text: "Nike", callback_data: "Nike" },
           { text: "Adidas", callback_data: "Adidas" },
         ],
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+        [{ text: "🏠 Главное меню", callback_data: "exit" }],
       ],
     };
     return football_model;
@@ -88,7 +86,7 @@ async function check_style(chat_id) {
           { text: "NewBalance", callback_data: "NewBalance" },
           { text: "Jordan", callback_data: "Jordan" },
         ],
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+        [{ text: "🏠 Главное меню", callback_data: "exit" }],
       ],
     };
     return lifestyle_model;
@@ -103,7 +101,7 @@ async function check_style(chat_id) {
           { text: "Puma", callback_data: "Puma" },
           { text: "Jordan", callback_data: "Jordan" },
         ],
-        [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+        [{ text: "🏠 Главное меню", callback_data: "exit" }],
       ],
     };
     return basket_model;
