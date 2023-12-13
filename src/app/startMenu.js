@@ -327,7 +327,7 @@ module.exports = (bot) => {
                   [{ text: "👟 Лайфстайл", callback_data: "lifestyle" }],
                   [{ text: "🏀 Баскетбольные", callback_data: "basket" }],
                   [{ text: "⚽️ Футбольные", callback_data: "football" }],
-                  [{ text: "🏠 Выход в главное меню", callback_data: "exit" }],
+                  [{ text: "🏠 Главное меню", callback_data: "exit" }],
                 ],
               }),
             }
@@ -774,7 +774,7 @@ module.exports = (bot) => {
                     ],
                     [
                       {
-                        text: "🏠 Выход в главное меню",
+                        text: "🏠 Главное меню",
                         callback_data: "end",
                       },
                     ],
@@ -867,7 +867,7 @@ module.exports = (bot) => {
                 inline_keyboard: [
                   [
                     {
-                      text: "🏠 Выход в главное меню",
+                      text: "🏠 Главное меню",
                       callback_data: "end",
                     },
                   ],
@@ -887,7 +887,7 @@ module.exports = (bot) => {
                 inline_keyboard: [
                   [
                     {
-                      text: "🏠 Выход в главное меню",
+                      text: "🏠 Главное меню",
                       callback_data: "end",
                     },
                   ],
@@ -953,7 +953,7 @@ module.exports = (bot) => {
                     inline_keyboard: [
                       [
                         {
-                          text: "🏠 Выход в главное меню",
+                          text: "🏠 Главное меню",
                           callback_data: "end",
                         },
                       ],
@@ -992,7 +992,7 @@ module.exports = (bot) => {
                     ],
                     [
                       {
-                        text: "🏠 Выход в главное меню",
+                        text: "🏠 Главное меню",
                         callback_data: "exit",
                       },
                     ],
